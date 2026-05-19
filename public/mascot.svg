@@ -1,0 +1,23 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Shriram SIP mascot">
+  <!-- Original Shriram SIP mascot: a friendly savings coin with a growth sprout.
+       Drawn black-on-transparent so it sits on the yellow brand tile. -->
+
+  <!-- growth sprout -->
+  <path d="M60 32 V15" stroke="#0A0A0B" stroke-width="6.5" stroke-linecap="round"/>
+  <path d="M60 21 C62 7 81 4 87 15 C80 27 64 29 60 21 Z" fill="#0A0A0B"/>
+  <circle cx="84.5" cy="13" r="2.6" fill="#0A0A0B"/>
+
+  <!-- little feet -->
+  <ellipse cx="48" cy="113" rx="9.5" ry="5" fill="#0A0A0B"/>
+  <ellipse cx="72" cy="113" rx="9.5" ry="5" fill="#0A0A0B"/>
+
+  <!-- coin body -->
+  <circle cx="60" cy="71" r="42" fill="#0A0A0B"/>
+  <!-- coin rim -->
+  <circle cx="60" cy="71" r="30.5" fill="none" stroke="#FFC107" stroke-width="3.2"/>
+
+  <!-- face -->
+  <circle cx="50.5" cy="65" r="5.6" fill="#FFC107"/>
+  <circle cx="69.5" cy="65" r="5.6" fill="#FFC107"/>
+  <path d="M46.5 80 Q60 92.5 73.5 80" fill="none" stroke="#FFC107" stroke-width="5.6" stroke-linecap="round"/>
+</svg>
