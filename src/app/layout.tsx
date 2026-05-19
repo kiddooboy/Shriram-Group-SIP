@@ -4,7 +4,6 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Shriram Group SIP — Employee Benefit Plan',
   description: 'AI-powered SIP plan for Shriram Group employees. Invest in Shriram AMC funds with a plan personalised to your life stage.',
-  other: { 'x-deploy-check': 'pipeline-test-1' },
 }
 
 export const viewport: Viewport = {
