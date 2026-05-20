@@ -9,6 +9,7 @@ import {
   GOAL_CARDS, profileConfidence,
 } from '@/lib/questionnaire'
 import { CashflowAnswer, GoalEntry, PrimaryGoal, QAnswer } from '@/lib/types'
+import { formatCurrency } from '@/lib/funds'
 
 export default function QuestionsStep() {
   const {
@@ -19,11 +20,12 @@ export default function QuestionsStep() {
   const [multi, setMulti] = useState<string[]>([])
   const [cashflow, setCashflow] = useState<CashflowAnswer>({ takehome: '', expenses: '', emi: '' })
   const [goals, setGoals] = useState<PrimaryGoal[]>([])
-  const [horizon, setHorizon] = useState(7)
+  const [horizons, setHorizons] = useState<Partial<Record<PrimaryGoal, number>>>({})
+  const [targets, setTargets] = useState<Partial<Record<PrimaryGoal, number>>>({})
 
   useEffect(() => {
     setSingle(''); setMulti([]); setCashflow({ takehome: '', expenses: '', emi: '' })
-    setGoals([]); setHorizon(7)
+    setGoals([]); setHorizons({}); setTargets({})
   }, [currentQuestion])
 
   useEffect(() => {
@@ -45,10 +47,14 @@ export default function QuestionsStep() {
     if (q.type === 'single') return single
     if (q.type === 'multi') return multi
     if (q.type === 'cashflow') return cashflow
-    return goals.map<GoalEntry>((g, i) => ({
-      type: g,
-      horizonYears: i === 0 ? horizon : (GOAL_CARDS.find(c => c.type === g)?.defaultHorizon ?? 7),
-    }))
+    return goals.map<GoalEntry>(g => {
+      const card = GOAL_CARDS.find(c => c.type === g)
+      return {
+        type: g,
+        horizonYears: horizons[g] ?? card?.defaultHorizon ?? 7,
+        targetAmount: targets[g] ?? card?.defaultTarget ?? 10_00_000,
+      }
+    })
   }
 
   function handleNext() {
@@ -58,12 +64,19 @@ export default function QuestionsStep() {
   }
 
   function toggleGoal(g: PrimaryGoal) {
+    const card = GOAL_CARDS.find(c => c.type === g)
     setGoals(prev => {
-      if (prev.includes(g)) return prev.filter(x => x !== g)
+      if (prev.includes(g)) {
+        // Removing — also drop its per-goal inputs
+        setHorizons(h => { const n = { ...h }; delete n[g]; return n })
+        setTargets(t => { const n = { ...t }; delete n[g]; return n })
+        return prev.filter(x => x !== g)
+      }
       if (prev.length >= 3) return prev
-      const next = [...prev, g]
-      if (next.length === 1) setHorizon(GOAL_CARDS.find(c => c.type === g)?.defaultHorizon ?? 7)
-      return next
+      // Adding — seed defaults
+      setHorizons(h => ({ ...h, [g]: card?.defaultHorizon ?? 7 }))
+      setTargets(t => ({ ...t, [g]: card?.defaultTarget ?? 10_00_000 }))
+      return [...prev, g]
     })
   }
 
@@ -203,21 +216,48 @@ export default function QuestionsStep() {
                     </button>
                   )
                 })}
-                {goals.length > 0 && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="cred-card px-5 py-5 !mt-3">
-                    <div className="flex justify-between mb-3">
-                      <span className="text-white/50 text-[13px]">
-                        When do you need <span className="text-white font-semibold">{GOAL_CARDS.find(c => c.type === goals[0])?.label}</span>?
-                      </span>
-                      <span className="text-shriram-orange font-bold text-[15px]">{horizon} yr</span>
-                    </div>
-                    <input type="range" min={1} max={30} value={horizon}
-                      onChange={e => setHorizon(Number(e.target.value))}
-                      className="w-full accent-shriram-orange" />
-                    <div className="flex justify-between text-white/25 text-[11px] mt-1.5"><span>1 yr</span><span>30 yr</span></div>
-                  </motion.div>
-                )}
-                <p className="text-white/25 text-[12px] text-center pt-1">Your first pick (★) is the primary goal</p>
+                {goals.map((g, i) => {
+                  const card = GOAL_CARDS.find(c => c.type === g)!
+                  const h = horizons[g] ?? card.defaultHorizon
+                  const t = targets[g] ?? card.defaultTarget
+                  return (
+                    <motion.div key={g}
+                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                      className="cred-card px-5 py-4 !mt-3">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-[18px] leading-none">{card.emoji}</span>
+                        <span className="text-white font-semibold text-[14px] flex-1">{card.label}</span>
+                        <span className="text-shriram-orange text-[10px] font-bold uppercase tracking-wider">
+                          {i === 0 ? '★ Primary' : `#${i + 1}`}
+                        </span>
+                      </div>
+                      {/* Horizon */}
+                      <div className="flex justify-between text-[12px] mb-1">
+                        <span className="text-white/50">When do you need it?</span>
+                        <span className="text-shriram-orange font-bold">{h} yr</span>
+                      </div>
+                      <input type="range" min={1} max={30} value={h}
+                        onChange={e => setHorizons(prev => ({ ...prev, [g]: Number(e.target.value) }))}
+                        className="w-full accent-shriram-orange" />
+                      <div className="flex justify-between text-white/20 text-[10px]"><span>1 yr</span><span>30 yr</span></div>
+                      {/* Target */}
+                      <div className="flex justify-between text-[12px] mt-3 mb-1">
+                        <span className="text-white/50">Target (today&apos;s ₹)</span>
+                        <span className="text-shriram-orange font-bold">{formatCurrency(t)}</span>
+                      </div>
+                      <input type="range" min={card.targetMin} max={card.targetMax} step={card.targetStep} value={t}
+                        onChange={e => setTargets(prev => ({ ...prev, [g]: Number(e.target.value) }))}
+                        className="w-full accent-shriram-orange" />
+                      <div className="flex justify-between text-white/20 text-[10px]">
+                        <span>{formatCurrency(card.targetMin)}</span>
+                        <span>{formatCurrency(card.targetMax)}</span>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+                <p className="text-white/25 text-[12px] text-center pt-1">
+                  Your first pick (★) is the primary goal · we&apos;ll adjust for inflation
+                </p>
               </div>
             )}
           </motion.div>

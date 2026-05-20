@@ -21,6 +21,7 @@ export const SHRIRAM_FUNDS: ShriramFund[] = [
     assetMix: 'Equity + Debt + Gold',
     bestFor: 'Cautious or first-time investors, anyone who would be anxious in a crash, or shorter (3–6 year) horizons — the steadiest all-weather choice.',
     drawdownNote: 'Shallowest falls of the three — gold and debt typically hold up when equities drop.',
+    annualVolatility: 10,
     taxNote: 'Equity taxation when equity ≥ 65%: LTCG 12.5% after 1 year',
   },
   {
@@ -43,6 +44,7 @@ export const SHRIRAM_FUNDS: ShriramFund[] = [
     assetMix: 'Pure equity (large + mid + small cap)',
     bestFor: 'Experienced, risk-tolerant investors with a long (7+ year) horizon who can stay calm through market crashes.',
     drawdownNote: 'Deepest falls of the three — no debt or gold cushion. Needs a long horizon to recover.',
+    annualVolatility: 16,
     taxNote: 'Equity taxation: LTCG 12.5% after 1 year; STCG 20%',
   },
   {
@@ -65,6 +67,7 @@ export const SHRIRAM_FUNDS: ShriramFund[] = [
     assetMix: 'Equity (65–80%) + Debt (20–35%)',
     bestFor: 'Moderate-risk investors with a medium-to-long (5+ year) horizon who want real equity growth but a smoother ride than a pure-equity fund.',
     drawdownNote: 'Moderate falls — the debt portion softens equity drops, but there is no gold cushion.',
+    annualVolatility: 12.5,
     taxNote: 'Equity taxation: LTCG 12.5% after 1 year',
   },
   {

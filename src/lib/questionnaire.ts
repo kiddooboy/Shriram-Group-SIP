@@ -226,12 +226,22 @@ export const CASHFLOW_EMI: QOption[] = [
 ]
 
 // ─── Goal cards for the GOALS question ────────────────────────────────────────
-export const GOAL_CARDS: { type: import('./types').PrimaryGoal; emoji: string; label: string; sub: string; defaultHorizon: number }[] = [
-  { type: 'EMERGENCY',    emoji: '🛡️', label: 'Emergency Fund',     sub: 'A safety net',            defaultHorizon: 2 },
-  { type: 'BIG_PURCHASE', emoji: '🚗', label: 'Big Purchase',        sub: 'Vehicle, wedding, trip',  defaultHorizon: 3 },
-  { type: 'HOME',         emoji: '🏠', label: 'Home / Down Payment', sub: 'Buy or upgrade a home',   defaultHorizon: 7 },
-  { type: 'CHILD_FUTURE', emoji: '🎓', label: "Child's Future",      sub: 'Education or marriage',   defaultHorizon: 12 },
-  { type: 'RETIREMENT',   emoji: '🌅', label: 'Retirement',          sub: 'Long-term wealth',        defaultHorizon: 20 },
+// All target amounts are in TODAY's rupees — the engine inflates each to its
+// future-year value before sizing the SIP.
+export const GOAL_CARDS: {
+  type: import('./types').PrimaryGoal
+  emoji: string; label: string; sub: string
+  defaultHorizon: number
+  defaultTarget: number
+  targetMin: number
+  targetMax: number
+  targetStep: number
+}[] = [
+  { type: 'EMERGENCY',    emoji: '🛡️', label: 'Emergency Fund',     sub: 'A safety net',            defaultHorizon: 2,  defaultTarget: 1_50_000,    targetMin: 50_000,    targetMax: 10_00_000,    targetStep: 25_000   },
+  { type: 'BIG_PURCHASE', emoji: '🚗', label: 'Big Purchase',        sub: 'Vehicle, wedding, trip',  defaultHorizon: 3,  defaultTarget: 5_00_000,    targetMin: 1_00_000,  targetMax: 50_00_000,    targetStep: 50_000   },
+  { type: 'HOME',         emoji: '🏠', label: 'Home / Down Payment', sub: 'Buy or upgrade a home',   defaultHorizon: 7,  defaultTarget: 50_00_000,   targetMin: 10_00_000, targetMax: 5_00_00_000,  targetStep: 1_00_000 },
+  { type: 'CHILD_FUTURE', emoji: '🎓', label: "Child's Future",      sub: 'Education or marriage',   defaultHorizon: 12, defaultTarget: 30_00_000,   targetMin: 5_00_000,  targetMax: 2_00_00_000,  targetStep: 1_00_000 },
+  { type: 'RETIREMENT',   emoji: '🌅', label: 'Retirement',          sub: 'Long-term wealth',        defaultHorizon: 20, defaultTarget: 2_00_00_000, targetMin: 25_00_000, targetMax: 10_00_00_000, targetStep: 5_00_000 },
 ]
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -352,7 +362,7 @@ export const IMPUTED_DEFAULTS: Record<QuestionCode, QAnswer> = {
   WEALTH:        'W_LOW',
   EMERGENCY:     'E_1_3',
   SIP_STRESS:    'S_1500',
-  GOALS:         [{ type: 'RETIREMENT', horizonYears: 20 }] as GoalEntry[],
+  GOALS:         [{ type: 'RETIREMENT', horizonYears: 20, targetAmount: 2_00_00_000 }] as GoalEntry[],
   CRASH:         'C_HOLD',
   EXPERIENCE:    'X_SOME',
   LIQUIDITY:     'L_MAYBE',

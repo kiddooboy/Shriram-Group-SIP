@@ -65,7 +65,11 @@ export default function SuccessStep() {
         {/* SIP card */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
           className="rounded-3xl bg-orange-gradient p-6 mb-4">
-          <div className="text-black/55 text-[12px] font-medium">{fund?.name}</div>
+          <div className="text-black/55 text-[12px] font-medium">
+            {recommendation && recommendation.goals.length > 1
+              ? `${recommendation.goals.length} goals · ${fund?.shortName} + ${recommendation.goals.length - 1} more`
+              : fund?.name}
+          </div>
           <div className="text-black font-extrabold text-4xl tracking-tightest mt-1">{formatSIPAmount(sipAmt)}</div>
           <div className="text-black/60 text-[13px] mt-0.5 font-medium">for {years} years</div>
           <div className="flex items-center gap-2 mt-4 pt-4 border-t border-black/15">

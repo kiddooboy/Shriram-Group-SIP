@@ -90,6 +90,7 @@ export type PrimaryGoal =
 export interface GoalEntry {
   type: PrimaryGoal
   horizonYears: number
+  targetAmount: number   // today's ₹ — the engine inflates this to a future value
 }
 
 // ─── Answer values ────────────────────────────────────────────────────────────
@@ -137,9 +138,10 @@ export interface ShriramFund {
   goalTags: PrimaryGoal[]
   description: string
   taxNote: string
-  assetMix?: string      // e.g. "Equity + Debt + Gold"
-  bestFor?: string       // one-line suitability summary
-  drawdownNote?: string  // how it behaves in a market fall
+  assetMix?: string         // e.g. "Equity + Debt + Gold"
+  bestFor?: string          // one-line suitability summary
+  drawdownNote?: string     // how it behaves in a market fall
+  annualVolatility?: number // % — used by Monte Carlo for realistic corpus bands
 }
 
 // ─── Recommendation ───────────────────────────────────────────────────────────
@@ -149,28 +151,57 @@ export interface ShapFactor {
   direction: 'up' | 'down'
 }
 
-export interface AIRecommendation {
+// Per-goal sub-portfolio recommendation — one of these per user goal (up to 3).
+export interface GoalRecommendation {
+  goal: GoalEntry                       // type, horizon, target (today's ₹)
+  targetFutureValue: number             // target inflated to its future-year value
   fund: ShriramFund
-  sipAmount: number
+  requiredSIP: number                   // amount mathematically needed to hit target
+  recommendedSIP: number                // capped by affordability share — may be < required
+  shortfall: boolean                    // true when recommendedSIP < requiredSIP
+  shortfallAmount: number               // future-value rupees of expected shortfall
   tenureMonths: number
-  projectedCorpus: number
+  // Monte Carlo corpus distribution (1,000 paths using fund return + volatility)
+  projectedCorpus: number               // P50 (median)
+  corpusP10: number
+  corpusP90: number
+  goalAttainmentProbability: number     // % of MC paths reaching targetFutureValue
+  crashStressProbability: number        // attainment % if a 35% crash hits at year 3
+  reasoning: string
+  considered: Array<{ fund: ShriramFund; reasonNotChosen: string }>
+}
+
+export interface AIRecommendation {
+  // ── Primary-goal mirror fields (for downstream Mandate / Success / Dashboard) ──
+  fund: ShriramFund                     // primary goal's fund
+  sipAmount: number                     // TOTAL across all goals (the auto-debit amount)
+  tenureMonths: number                  // primary goal's tenure
+  projectedCorpus: number               // primary goal's P50
   corpusP10: number
   corpusP90: number
   primaryGoal: PrimaryGoal
   goalAttainmentProbability: number
-  stressFloorSIP: number
-  monthlyDisposable: number
   reasoning: string
+
+  // ── Per-goal sub-portfolios ──
+  goals: GoalRecommendation[]           // 1–3 entries
+  totalMonthlySIP: number               // sum of recommendedSIP
+  affordableSIPCeiling: number          // sustainable monthly capacity
+  anyShortfall: boolean                 // true if affordability < total required
+
+  // ── Profile-level ──
   confidenceScore: number
-  growthScore: number          // 0–100 — how aggressively the engine sized the user
-  riskCapacity: number         // 0–100 — financial ability to absorb loss
-  riskWillingness: number      // 0–100 — psychological appetite for risk
-  riskNote: string | null      // set when capacity and willingness diverge
+  growthScore: number                   // for the primary goal's choice
+  riskCapacity: number
+  riskWillingness: number
+  riskNote: string | null
   emergencyFirst: boolean
   unmetNeed: string | null
   liquidityNote: string | null
+  stressFloorSIP: number
+  monthlyDisposable: number
   shapFactors: ShapFactor[]
-  considered: Array<{          // the other two core funds + why they lost
+  considered: Array<{                   // for the primary goal
     fund: ShriramFund
     reasonNotChosen: string
   }>

@@ -74,7 +74,11 @@ export default function MandateStep() {
         <div className="rounded-3xl bg-orange-gradient p-5 mb-6">
           <div className="text-black/55 text-[12px] mb-1 font-medium">Monthly auto-debit</div>
           <div className="text-black font-extrabold text-3xl tracking-tightest">{formatSIPAmount(sipAmt)}</div>
-          <div className="text-black/65 text-[13px] mt-1 font-medium">{fund?.shortName} · 1st of every month</div>
+          <div className="text-black/65 text-[13px] mt-1 font-medium">
+            {recommendation && recommendation.goals.length > 1
+              ? `Across ${recommendation.goals.length} goals · 1st of every month`
+              : `${fund?.shortName} · 1st of every month`}
+          </div>
           <div className="flex items-center gap-1.5 mt-3 text-black/55 text-[11px] font-medium">
             <Lock className="w-3 h-3" /> RBI NACH framework · 24-hour pre-debit SMS
           </div>
