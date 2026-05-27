@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shriram Group SIP — AI Curation Logic</title>
+  <style>
+    /* ── Print & screen base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 11pt;
+      color: #1a1a1a;
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    /* ── Cover page ── */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #c8102e 0%, #8b0000 100%);
+      color: #fff;
+      text-align: center;
+      padding: 60px 40px;
+      page-break-after: always;
+    }
+    .cover .logo-bar {
+      font-size: 13pt;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      opacity: 0.85;
+      margin-bottom: 50px;
+    }
+    .cover h1 {
+      font-size: 32pt;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+    .cover .subtitle {
+      font-size: 14pt;
+      opacity: 0.88;
+      max-width: 600px;
+      margin-bottom: 50px;
+    }
+    .cover .meta {
+      font-size: 10pt;
+      opacity: 0.7;
+      letter-spacing: 1px;
+    }
+    .cover .pill {
+      display: inline-block;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 9.5pt;
+      letter-spacing: 1px;
+      margin-top: 14px;
+    }
+
+    /* ── Page wrapper ── */
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 56px;
+    }
+
+    /* ── Section breaks ── */
+    .section-break { page-break-before: always; }
+
+    /* ── Headers ── */
+    h2 {
+      font-size: 18pt;
+      font-weight: 700;
+      color: #c8102e;
+      border-bottom: 2.5px solid #c8102e;
+      padding-bottom: 8px;
+      margin: 44px 0 18px;
+    }
+    h3 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 28px 0 10px;
+    }
+    h4 {
+      font-size: 11.5pt;
+      font-weight: 700;
+      color: #444;
+      margin: 18px 0 8px;
+    }
+    p { margin-bottom: 12px; }
+    ul, ol { margin: 10px 0 14px 22px; }
+    li { margin-bottom: 5px; }
+
+    /* ── Call-out boxes ── */
+    .callout {
+      border-left: 4px solid #c8102e;
+      background: #fff5f5;
+      padding: 14px 18px;
+      border-radius: 0 6px 6px 0;
+      margin: 18px 0;
+    }
+    .callout.blue {
+      border-left-color: #1565c0;
+      background: #f0f4ff;
+    }
+    .callout.green {
+      border-left-color: #2e7d32;
+      background: #f0faf0;
+    }
+    .callout.amber {
+      border-left-color: #e65100;
+      background: #fff8f0;
+    }
+    .callout strong { color: #c8102e; }
+    .callout.blue strong { color: #1565c0; }
+    .callout.green strong { color: #2e7d32; }
+    .callout.amber strong { color: #e65100; }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 22px;
+      font-size: 10pt;
+    }
+    thead tr { background: #c8102e; color: #fff; }
+    thead th { padding: 9px 12px; text-align: left; font-weight: 600; }
+    tbody tr:nth-child(even) { background: #faf5f5; }
+    tbody tr:nth-child(odd)  { background: #fff; }
+    tbody td { padding: 8px 12px; border-bottom: 1px solid #ececec; }
+    tbody tr:last-child td   { border-bottom: none; }
+
+    /* ── Step-flow ── */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 16px 0 24px;
+      position: relative;
+    }
+    .flow-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      position: relative;
+    }
+    .flow-item + .flow-item::before {
+      content: '';
+      position: absolute;
+      left: 17px;
+      top: -22px;
+      width: 2px;
+      height: 22px;
+      background: #d9d9d9;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #c8102e;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13pt;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .step-body { flex: 1; margin-bottom: 20px; }
+    .step-body h4 { margin-top: 0; color: #c8102e; font-size: 12pt; }
+
+    /* ── Model cards ── */
+    .model-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 18px 0 24px;
+    }
+    .model-card {
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      background: #fafafa;
+    }
+    .model-card .label {
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #c8102e;
+      margin-bottom: 4px;
+    }
+    .model-card h4 { margin: 0 0 6px; font-size: 11pt; }
+    .model-card p  { font-size: 9.5pt; color: #444; margin: 0; }
+
+    /* ── Metrics strip ── */
+    .metrics {
+      display: flex;
+      gap: 14px;
+      margin: 20px 0 28px;
+      flex-wrap: wrap;
+    }
+    .metric-box {
+      flex: 1;
+      min-width: 130px;
+      background: #c8102e;
+      color: #fff;
+      border-radius: 8px;
+      padding: 16px 14px;
+      text-align: center;
+    }
+    .metric-box .num  { font-size: 22pt; font-weight: 800; line-height: 1; }
+    .metric-box .lbl  { font-size: 8pt; opacity: 0.85; margin-top: 4px; letter-spacing: 0.5px; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 60px;
+      padding-top: 18px;
+      border-top: 1px solid #ddd;
+      font-size: 8.5pt;
+      color: #888;
+      text-align: center;
+    }
+
+    /* ── TOC ── */
+    .toc { margin: 30px 0 40px; }
+    .toc ol { counter-reset: toc-item; list-style: none; margin: 0; }
+    .toc li { counter-increment: toc-item; padding: 5px 0; border-bottom: 1px dotted #ddd; }
+    .toc li::before { content: counter(toc-item) ". "; font-weight: 700; color: #c8102e; }
+
+    /* ── Print tweaks ── */
+    @media print {
+      body  { font-size: 10pt; }
+      .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .model-card, .metric-box, thead tr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      h2 { page-break-after: avoid; }
+      table { page-break-inside: avoid; }
+      .flow-item { page-break-inside: avoid; }
+    }
+
+    @page {
+      margin: 18mm 15mm;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ COVER ═══════════════════════════════ -->
+<div class="cover">
+  <div class="logo-bar">Shriram Group of Companies</div>
+  <h1>How AI Curates<br>the Best Mutual Fund<br>for Every Employee</h1>
+  <p class="subtitle">A plain-English guide to the AI Recommendation Engine powering the Shriram Group SIP Platform</p>
+  <div class="meta">
+    AI Logic Overview &nbsp;·&nbsp; May 2026 &nbsp;·&nbsp; Internal Document
+  </div>
+  <div class="pill">Confidential — Not for External Distribution</div>
+</div>
+
+<!-- ═══════════════════════════════ BODY ═══════════════════════════════ -->
+<div class="page">
+
+  <!-- ── Table of Contents ── -->
+  <h2 style="margin-top:0">Contents</h2>
+  <div class="toc">
+    <ol>
+      <li>The Big Picture — What the AI Does</li>
+      <li>Step 1 · Know You: The Adaptive Questionnaire</li>
+      <li>Step 2 · Understand the Market: Fund & Regime Analysis</li>
+      <li>Step 3 · Match & Optimise: The Recommendation Engine</li>
+      <li>Step 4 · Explain & Communicate: Plain-Language Rationale</li>
+      <li>The Eight AI Models — At a Glance</li>
+      <li>Why Only Shriram AMC Funds?</li>
+      <li>Cold Start — What Happens on Day 1</li>
+      <li>Behavioral Intelligence</li>
+      <li>Safeguards: Compliance, Fairness & Governance</li>
+      <li>Performance Targets</li>
+    </ol>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <h2>1. The Big Picture — What the AI Does</h2>
+
+  <p>
+    The Shriram Group SIP platform uses an eight-model AI engine to answer one question for every employee:
+    <em>"Given who you are, what you earn, what you want, and how the market looks right now — which Shriram AMC fund(s) should you invest in, for how much, and for how long?"</em>
+  </p>
+  <p>
+    It does this <strong>not</strong> through a one-size-fits-all rule like "aggressive = small-cap" but through a real-time, personalized pipeline that ingests your profile, your goals, live market data, and the behavioral patterns of thousands of employees like you — then optimises the answer to maximise the probability that you actually reach your goal.
+  </p>
+
+  <div class="callout green">
+    <strong>The core promise:</strong> The AI recommends the fund, the exact SIP amount, and the tenure most likely to get you to your specific goal — and it tells you why, in your language.
+  </div>
+
+  <div class="metrics">
+    <div class="metric-box">
+      <div class="num">8</div>
+      <div class="lbl">AI / ML Models working together</div>
+    </div>
+    <div class="metric-box">
+      <div class="num">13</div>
+      <div class="lbl">Questions in the adaptive profile (only 9–11 shown)</div>
+    </div>
+    <div class="metric-box">
+      <div class="num">&lt;15 min</div>
+      <div class="lbl">Onboarding to first SIP (incl. KYC)</div>
+    </div>
+    <div class="metric-box">
+      <div class="num">7</div>
+      <div class="lbl">Indian languages supported</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section-break"></div>
+  <h2>2. Step 1 · Know You: The Adaptive Questionnaire</h2>
+
+  <p>
+    Before the AI can recommend anything, it needs to understand your financial life. Instead of a static 20-question survey that most people rush through, the engine uses an <strong>adaptive Bayesian questionnaire</strong> — a smart interview that asks only the questions <em>most useful for you specifically</em>, based on what it already knows.
+  </p>
+
+  <h3>How it works</h3>
+  <p>
+    When you sign in, the system already knows your <strong>age</strong> (from Aadhaar KYC), your <strong>employer entity, designation, and location</strong> (from SSO). It immediately builds a starting-point estimate of your likely financial profile by comparing you to thousands of employees in the same age-band, designation tier, and city type from industry data.
+  </p>
+  <p>
+    Then the questionnaire begins. After each answer, the AI <strong>recalculates which remaining question would teach it the most</strong> about you. Questions that would be redundant (because your answers already make them obvious) are skipped. This is why most employees only see 9–11 of the 13 questions.
+  </p>
+
+  <div class="callout blue">
+    <strong>Bayesian adaptive engine:</strong> The system maintains a probability distribution over your risk capacity, savings ability, time horizon, and behavioral biases. Each answer narrows that distribution. When it is narrow enough — confident enough — it stops asking and starts recommending.
+  </div>
+
+  <h3>The 13-question bank</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>What it asks</th>
+        <th>What it captures</th>
+        <th>Why it matters</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Family situation</td><td>Marital status, dependents, sole earner?</td><td>Determines how much risk you can truly afford</td></tr>
+      <tr><td>2</td><td>Monthly cash flow</td><td>Take-home band, fixed costs, EMIs</td><td>Calculates how much SIP amount is feasible</td></tr>
+      <tr><td>3</td><td>Existing wealth</td><td>Savings across equity, FDs, gold, real estate</td><td>Understands your current portfolio and gaps</td></tr>
+      <tr><td>4</td><td>Emergency buffer</td><td>Months of expenses liquid right now</td><td>Safety-net check before any investment</td></tr>
+      <tr><td>5</td><td>SIP stress test</td><td>"If income fell 20% for 6 months, what SIP could you sustain?"</td><td>Sets the conservative amount floor — prevents SIP bounces</td></tr>
+      <tr><td>6</td><td>Your goals</td><td>Top 3 goals: type, target amount, target year</td><td>The entire recommendation is built around these</td></tr>
+      <tr><td>7</td><td>Market crash reaction</td><td>"Your ₹1L becomes ₹70k in a month — you do…?"</td><td>Measures true loss aversion, not just stated risk appetite</td></tr>
+      <tr><td>8</td><td>Investment experience</td><td>Years in MF/equity + self-confidence rating</td><td>Calibrates how much jargon to use in explanations</td></tr>
+      <tr><td>9</td><td>Liquidity need</td><td>Any planned withdrawal within 12 months?</td><td>Prevents locking money you may need soon</td></tr>
+      <tr><td>10</td><td>Tax situation</td><td>Tax slab, 80C headroom used</td><td>Drives honest ELSS & tax-regime guidance</td></tr>
+      <tr><td>11</td><td>Insurance coverage</td><td>Term and health cover in place?</td><td>Flags protection gaps before adding investment risk</td></tr>
+      <tr><td>12</td><td>Risk split scenario</td><td>Capacity vs. stated preference conflict test</td><td>Reconciles when someone says aggressive but can't afford it</td></tr>
+      <tr><td>13</td><td>Preferences</td><td>ESG, no-go sectors, lump-sum vs SIP preference</td><td>Personalises the fund selection within the universe</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout amber">
+    <strong>Three questions are never skipped</strong> — Cash Flow, Goals, and the Crash Scenario — because they define the amount, the tenure, and the risk limit that the entire recommendation is built on.
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section-break"></div>
+  <h2>3. Step 2 · Understand the Market: Fund &amp; Regime Analysis</h2>
+
+  <p>
+    While the questionnaire is running, the engine is simultaneously analysing the mutual fund landscape — not to pick stocks, but to understand <em>which category of fund, at what risk level, is most appropriate given current market conditions</em>.
+  </p>
+
+  <h3>Fund Universe Ingestion</h3>
+  <p>
+    Every night the system ingests data on all ~2,000 mutual fund schemes across all 44 AMCs in India — NAV history, holdings, risk metrics, manager tenure, and factsheet disclosures. This full-universe data is used exclusively for <strong>benchmarking</strong>: understanding where each Shriram AMC fund sits relative to its peers.
+  </p>
+
+  <div class="callout">
+    <strong>Important:</strong> The AI only <em>recommends</em> Shriram AMC's own schemes. The full universe is ingested so the system can honestly tell you "this fund is in the top quartile of its category for 3-year risk-adjusted returns" — a claim that requires seeing all 44 AMCs.
+  </div>
+
+  <h3>Market Regime Detection (Model M4)</h3>
+  <p>
+    The engine classifies the <strong>current market regime</strong> (risk-on, neutral, risk-off, or high-volatility) every day using macro and market indicators: index volatility, market breadth, yield curve shape, FII flows, and valuation percentiles. This does <em>not</em> trigger market timing for your SIP — SIPs work best with regular investing regardless of conditions. Instead, the regime:
+  </p>
+  <ul>
+    <li>Conditions the return-forecast models (more conservative in high-vol regimes)</li>
+    <li>Adjusts messaging — e.g., surfacing the "SIPs buy more units when markets fall" nudge during volatile periods</li>
+    <li>Tilts new-allocation defaults slightly more conservative in risk-off conditions</li>
+  </ul>
+
+  <h3>Return Forecasting (Model M5)</h3>
+  <p>
+    Rather than a single projected return number, the AI builds a <strong>distribution</strong>: optimistic, median, and pessimistic scenarios per fund, per goal, conditioned on the current regime. These are what power the "probability of reaching your goal" figure shown in the recommendation. Forecasts are deliberately shrunk toward long-run category averages — the system is cautious, not bullish.
+  </p>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section-break"></div>
+  <h2>4. Step 3 · Match &amp; Optimise: The Recommendation Engine</h2>
+
+  <p>
+    This is where your profile meets the fund universe. The engine does not simply look up a rule table ("moderate risk → balanced fund"). It uses machine learning to find the best fit and then runs an optimiser to determine the exact amount and tenure.
+  </p>
+
+  <div class="flow">
+    <div class="flow-item">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>User Embedding (Model M1)</h4>
+        <p>Your questionnaire answers, demographic data, and behavioral signals are compressed into a 64-dimensional mathematical representation of <em>you</em> — your financial personality, as the AI understands it. The six employee archetypes (Starter, Grower, Consolidator, Accelerator, Pre-Retiree, Near-Exit) are cluster priors in this space — your profile gravitates toward the most similar archetype but is never hard-bucketed into one.</p>
+      </div>
+    </div>
+    <div class="flow-item">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Fund Embedding (Model M2)</h4>
+        <p>Each Shriram AMC fund is represented as a 64-dimensional vector <em>in the same space</em> as your profile, based on its risk profile, return characteristics, category, holdings, and cost. This shared space means we can directly measure how well a fund "fits" you mathematically.</p>
+      </div>
+    </div>
+    <div class="flow-item">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Two-Tower Matching (Model M3)</h4>
+        <p>The engine computes a fit score between your profile vector and each Shriram AMC fund vector. Funds are ranked by suitability. This ranking is trained on real outcome data: pairings that led to goal attainment and SIP persistence score higher than those that led to early redemptions or bounces.</p>
+      </div>
+    </div>
+    <div class="flow-item">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>RL Portfolio Optimiser (Model M6)</h4>
+        <p>Given the shortlisted funds and the distributional return forecasts, a Reinforcement Learning optimiser determines the <strong>exact SIP amount and tenure</strong> for each of your goals. Its objective function is not "maximise expected return" but <strong>"maximise the probability you reach your goal amount by your target date"</strong> — while respecting your stress-test SIP floor, your liquidity constraint, your no-go preferences, and your risk capacity. The output is the recommendation: fund, ₹ amount, tenure, and a goal-attainment probability.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <strong>Why RL?</strong> Traditional optimisers maximise expected value, which means they can recommend a high-risk path that, on average, looks good — but has a meaningful chance of missing your goal. The RL approach directly maximises <em>P(goal met)</em>, making it more conservative and goal-aligned.
+  </div>
+
+  <h3>What if the engine can't serve a goal?</h3>
+  <p>
+    If your goal requires a product that Shriram AMC does not offer — for example, an ELSS fund for 80C tax-saving (Shriram AMC has no ELSS scheme), or an international fund — the engine <strong>explicitly flags this</strong> rather than forcing a poor-fit recommendation. You will see an honest message: "For 80C tax-saving, consider an ELSS scheme from another AMC — this platform does not offer one."
+  </p>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section-break"></div>
+  <h2>5. Step 4 · Explain &amp; Communicate: Plain-Language Rationale</h2>
+
+  <p>
+    A recommendation is only useful if the employee understands it and trusts it. The engine therefore generates a two-layer explanation for every recommendation.
+  </p>
+
+  <h3>Layer 1 — SHAP Attribution (internal)</h3>
+  <p>
+    SHAP (SHapley Additive exPlanations) is a technique from explainable AI that identifies exactly which inputs drove the recommendation and by how much. For example: "6-year goal horizon contributed +18% to tenure, moderate crash-scenario answer contributed −12% to equity allocation, ₹4,500 stress-floor contributed −8% to SIP amount."
+  </p>
+  <p>
+    This layer is stored for compliance and audit purposes, and feeds Layer 2.
+  </p>
+
+  <h3>Layer 2 — LLM Plain-Language Rationale (employee-facing)</h3>
+  <p>
+    The top SHAP factors are passed to a language model that generates 3–4 plain sentences in the employee's chosen language (Hindi, Tamil, Telugu, Kannada, Marathi, Bengali, Malayalam, or English). Crucially, the language model is constrained: it may only reference factors that appear in the SHAP output and facts about the specific fund — it cannot invent claims, exaggerate returns, or mention funds not in the recommendation.
+  </p>
+
+  <div class="callout blue">
+    <strong>Example rationale (English):</strong><br>
+    "Based on your 6-year goal of ₹10 lakh for your child's education and your preference to pause SIPs only when income drops significantly, we recommend the Shriram Multi Asset Allocation Fund. A monthly SIP of ₹6,200 gives you an 82% probability of reaching ₹10 lakh by 2031. This fund sits in the top quartile of its category for 3-year risk-adjusted return."
+  </div>
+
+  <h3>Mandatory disclosures (always shown)</h3>
+  <ul>
+    <li><strong>Related-party disclosure:</strong> "Shriram Finance distributes Shriram AMC funds. Both are part of Shriram Group."</li>
+    <li><strong>Market risk:</strong> "Mutual fund investments are subject to market risks. Read all scheme-related documents carefully."</li>
+    <li>Projections show a range (optimistic / median / pessimistic), never a single guaranteed number.</li>
+  </ul>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section-break"></div>
+  <h2>6. The Eight AI Models — At a Glance</h2>
+
+  <div class="model-grid">
+    <div class="model-card">
+      <div class="label">M1</div>
+      <h4>User Embedding</h4>
+      <p>Converts your complete profile into a 64-dimensional vector representing your financial personality. Robust to missing answers — degrades gracefully when questionnaire is incomplete.</p>
+    </div>
+    <div class="model-card">
+      <div class="label">M2</div>
+      <h4>Fund Embedding</h4>
+      <p>Encodes every mutual fund (all 2,000 schemes) in the same 64-dimensional space as M1, enabling direct profile–fund similarity measurement. Shriram AMC funds are tagged recommendable; all others are benchmark-only.</p>
+    </div>
+    <div class="model-card">
+      <div class="label">M3</div>
+      <h4>Two-Tower Matcher</h4>
+      <p>Computes user–fund fit scores across all Shriram AMC schemes. Trained on real outcome data — pairings that led to goal attainment score highest. Produces the ranked shortlist.</p>
+    </div>
+    <div class="model-card">
+      <div class="label">M4</div>
+      <h4>Market Regime Detector</h4>
+      <p>Classifies current market conditions (risk-on / neutral / risk-off / high-vol) daily from macro indicators. Conditions return forecasts and messaging — never triggers market timing.</p>
+    </div>
+    <div class="model-card">
+      <div class="label">M5</div>
+      <h4>Return Forecast Ensemble</h4>
+      <p>Produces distributional (p10 / p50 / p90) forward return estimates per fund, conditioned on the regime. Conservatively shrunk toward long-run category averages.</p>
+    </div>
+    <div class="model-card">
+      <div class="label">M6</div>
+      <h4>RL Portfolio Optimiser</h4>
+      <p>The decision engine. Determines SIP amount and tenure to maximise goal-attainment probability under your risk capacity, liquidity, and stress-floor constraints.</p>
+    </div>
+    <div class="model-card">
+      <div class="label">M7</div>
+      <h4>Contextual-Bandit Nudge</h4>
+      <p>Selects the best behavioral prompt for you (step-up reminder, dip reassurance, protection-gap alert). Optimises for healthy financial action, not raw app engagement. Frequency-capped.</p>
+    </div>
+    <div class="model-card">
+      <div class="label">M8</div>
+      <h4>Adaptive Questionnaire</h4>
+      <p>Bayesian belief-update engine that selects the next most-informative question to ask. Stops early (at 9–11 questions) once profile confidence is sufficient. Resumable across sessions.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section-break"></div>
+  <h2>7. Why Only Shriram AMC Funds?</h2>
+
+  <p>
+    The platform operates as a <strong>captive Mutual Fund Distributor (MFD)</strong> — similar to how SBI Mutual Fund is sold through SBI branches. Shriram Finance holds an AMFI ARN and distributes only Shriram AMC's schemes. This is a deliberate business and regulatory choice.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Aspect</th><th>Decision</th><th>Rationale</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Regulatory model</td>
+        <td>AMFI MFD (ARN holder)</td>
+        <td>Operates as suitability-based distributor, not investment adviser (SEBI RIA licence not required)</td>
+      </tr>
+      <tr>
+        <td>Fund universe</td>
+        <td>Shriram AMC only</td>
+        <td>Group synergy; captive model; streamlined compliance; related-party structure fully disclosed</td>
+      </tr>
+      <tr>
+        <td>2,000-scheme data</td>
+        <td>Ingested for benchmarking only</td>
+        <td>Enables honest peer-percentile reporting; never surfaced as a recommendation</td>
+      </tr>
+      <tr>
+        <td>Gaps disclosed</td>
+        <td>ELSS and international funds explicitly flagged</td>
+        <td>Suitability obligation — the AI must tell you when a product you need is not on this platform</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <h2>8. Cold Start — What Happens on Day 1</h2>
+
+  <p>
+    The system must work well even before it has seen a single real outcome. Four mechanisms ensure the first recommendation is still useful and conservative:
+  </p>
+
+  <ol>
+    <li><strong>Industry cohort priors:</strong> Starting estimates built from AMFI investor demographics, SEBI/RBI household-finance surveys, and published persona research, segmented by age, designation tier, location, and entity type. A new employee starts at their cohort's prior.</li>
+    <li><strong>Cluster-similarity weighting:</strong> For the first 90 days, your recommendation is a blend of the personal model (initially weak) and the cohort cluster recommendation (stronger). As your profile fills in and behavioral data accumulates, the personal model's weight rises from 20% to 90%.</li>
+    <li><strong>Conservative defaults:</strong> Until the profile-confidence score passes its threshold, the engine defaults to the Shriram Multi Asset Allocation Fund, uses the stress-tested SIP floor (not the optimistic figure), and assumes a shorter horizon. You can never be worse off for the system being unsure about you.</li>
+    <li><strong>Synthetic bootstrapping:</strong> ~50,000 synthetic employee profiles — sampled from the Shriram workforce distribution — are used to pre-train M1/M2/M3/M6 before real data exists, so models are not starting from zero.</li>
+  </ol>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section-break"></div>
+  <h2>9. Behavioral Intelligence</h2>
+
+  <p>
+    The questionnaire captures your <em>stated</em> preferences. Behavioral signals capture your <em>revealed</em> preferences — what you actually do under pressure. These signals flow into the user embedding from day one:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Signal</th><th>What it reveals</th><th>How it's used</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Time-to-decision per screen</td>
+        <td>Confidence vs. hesitation; very fast may indicate disengagement</td>
+        <td>Adjusts nudge timing and explanation depth</td>
+      </tr>
+      <tr>
+        <td>Slider edits and answer changes</td>
+        <td>True risk preference vs. first instinct; anchoring effects</td>
+        <td>Refines the risk-preference estimate in M1</td>
+      </tr>
+      <tr>
+        <td>Login timing after market drops</td>
+        <td>Loss-aversion or panic tendency (logs in within hours of a 3%+ fall)</td>
+        <td>Surfaces reassurance nudges proactively</td>
+      </tr>
+      <tr>
+        <td>Scroll depth on disclosures</td>
+        <td>Information appetite</td>
+        <td>Calibrates how detailed the rationale text is</td>
+      </tr>
+      <tr>
+        <td>Nudge acceptance / dismissal</td>
+        <td>Which messages work for this employee</td>
+        <td>M7 bandit reward signal — learns your communication preferences</td>
+      </tr>
+      <tr>
+        <td>SIP lifecycle events</td>
+        <td>Step-up accepted, SIP paused, bounce, redemption</td>
+        <td>Ground-truth outcome labels for model retraining</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout amber">
+    <strong>Privacy:</strong> Behavioral data is disclosed in the onboarding consent flow, used only for product personalisation, and is never visible to your employer or HR. It is deleted one year after you leave the Group (DPDP Act compliance).
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <h2>10. Safeguards: Compliance, Fairness &amp; Governance</h2>
+
+  <h3>Regulatory compliance</h3>
+  <table>
+    <thead>
+      <tr><th>Regulation</th><th>How the AI meets it</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>SEBI MF Regulations + AMFI</td>
+        <td>Recommendations framed as suitability assessment only; related-party disclosure on every screen; ARN/CEP current</td>
+      </tr>
+      <tr>
+        <td>SEBI RIA boundary</td>
+        <td>Captive MFD model; LLM rationale templates audited to exclude "investment advice" language</td>
+      </tr>
+      <tr>
+        <td>DPDP Act 2023</td>
+        <td>Granular consent; Aadhaar raw data never stored (only age derived); 1-year post-exit data erasure; DPO appointed</td>
+      </tr>
+      <tr>
+        <td>Income Tax / IRDAI</td>
+        <td>Honest ELSS-gap disclosure; insurance questions are education-only, not solicitation</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Fairness audits</h3>
+  <p>
+    Before any new model version is deployed, it must pass a fairness check: recommendations and nudges are tested for disparate impact across age, gender, location tier, and entity. The measure is comparable <em>goal-attainment probability</em> across groups — not identical recommendations, but equitable outcomes. A failure blocks deployment.
+  </p>
+
+  <h3>Model governance</h3>
+  <ul>
+    <li><strong>Champion/challenger:</strong> New model versions run in shadow (no employee impact) before promotion; promoted only after offline metrics + fairness pass.</li>
+    <li><strong>Drift monitoring:</strong> Input drift, prediction drift, and outcome drift are alarmed; automatic rollback on breach.</li>
+    <li><strong>Human oversight:</strong> An Investment Committee + Model Risk reviewer sign off all model promotions and review a sample of recommendations each quarter.</li>
+    <li><strong>Immutable audit log:</strong> Every recommendation is stored with its full input vector, model versions, SHAP values, and rationale text in a write-once log retained for 8 years. Any recommendation can be fully reconstructed.</li>
+  </ul>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section-break"></div>
+  <h2>11. Performance Targets</h2>
+
+  <div class="metrics">
+    <div class="metric-box">
+      <div class="num">&lt;250 ms</div>
+      <div class="lbl">Per questionnaire question turn (P95)</div>
+    </div>
+    <div class="metric-box">
+      <div class="num">&lt;1.2 s</div>
+      <div class="lbl">Full recommendation generation (P95)</div>
+    </div>
+    <div class="metric-box">
+      <div class="num">&gt;65%</div>
+      <div class="lbl">AI recommendation acceptance rate (Phase 2 gate)</div>
+    </div>
+    <div class="metric-box">
+      <div class="num">&gt;55%</div>
+      <div class="lbl">Employee enrollment rate (Phase 2 gate)</div>
+    </div>
+  </div>
+
+  <h3>Build phases</h3>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>Window</th><th>What ships</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>P0 — Foundations</strong></td>
+        <td>Months 1–3</td>
+        <td>Data ingestion, Feature Store, scheme master, cohort priors, synthetic profiles</td>
+      </tr>
+      <tr>
+        <td><strong>P1 — Heuristic engine</strong></td>
+        <td>Months 3–5</td>
+        <td>M8 adaptive questionnaire live; scoring/optimisation heuristic; rationale templates. Ships the 5,000-employee pilot.</td>
+      </tr>
+      <tr>
+        <td><strong>P2 — ML models</strong></td>
+        <td>Months 5–9</td>
+        <td>M1–M3, M5 trained on real data; M4 regime model; behavioral signal pipeline</td>
+      </tr>
+      <tr>
+        <td><strong>P3 — RL &amp; bandits</strong></td>
+        <td>Months 9–14</td>
+        <td>M6 RL optimiser and M7 contextual bandit once enough outcome data exists; full fairness cadence</td>
+      </tr>
+      <tr>
+        <td><strong>P4 — Continuous</strong></td>
+        <td>Ongoing</td>
+        <td>Active-learning retraining; drift monitoring; quarterly model-risk review</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="footer">
+    <p>Shriram Group SIP — AI Logic Overview &nbsp;·&nbsp; May 2026 &nbsp;·&nbsp; Internal Document — Confidential</p>
+    <p style="margin-top:6px">For technical detail see <code>docs/tech/ai-engine.md</code> (v2.0). Questions: contact the SIP Technology team.</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -2,125 +2,175 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Calendar, ArrowRight } from 'lucide-react'
+import { Check, Calendar } from 'lucide-react'
 import { useSIPStore } from '@/store/useSIPStore'
-import { formatCurrency, formatSIPAmount } from '@/lib/funds'
+import { SHRIRAM_FUNDS } from '@/lib/funds'
 
 export default function SuccessStep() {
-  const { employee, recommendation, adjustedSIP, adjustedFund, adjustedTenure, mandate, goNext } = useSIPStore()
+  const { employee, selectedFundId, selectedGoal, tunedSIPAmount, reset } = useSIPStore()
   const [burst, setBurst] = useState(true)
 
-  const sipAmt = adjustedSIP ?? recommendation?.sipAmount ?? 500
-  const fund = adjustedFund ?? recommendation?.fund
-  const tenure = adjustedTenure ?? recommendation?.tenureMonths ?? 60
-  const corpus = recommendation?.projectedCorpus ?? 0
-  const years = Math.round(tenure / 12)
+  const fund = SHRIRAM_FUNDS.find(f => f.id === selectedFundId) || SHRIRAM_FUNDS[0]
+  const amount = tunedSIPAmount || 500
+
+  // Horizon and projections
+  const returnRate = fund.threeYearReturn || 11.0
+  const r = (returnRate / 100) / 12
+  const years = 30
+  const months = years * 12
+  const fv = amount * ((Math.pow(1 + r, months) - 1) / r) * (1 + r)
+  const projectedLakhs = Math.round(fv / 100000)
+
   const nextDate = new Date()
   nextDate.setMonth(nextDate.getMonth() + 1, 1)
 
-  useEffect(() => { const t = setTimeout(() => setBurst(false), 3500); return () => clearTimeout(t) }, [])
+  useEffect(() => {
+    const t = setTimeout(() => setBurst(false), 3000)
+    return () => clearTimeout(t)
+  }, [])
 
   const milestones = [
-    ['25%', `${Math.round(years * 0.25)} yr`, formatCurrency(corpus * 0.18)],
-    ['50%', `${Math.round(years * 0.5)} yr`, formatCurrency(corpus * 0.45)],
-    ['100%', `${years} yr`, formatCurrency(corpus)],
+    { pct: '25%', year: '7 yr', amt: `₹${Math.round(projectedLakhs * 0.18)} Lakh` },
+    { pct: '50%', year: '15 yr', amt: `₹${Math.round(projectedLakhs * 0.45)} Lakh` },
+    { pct: '100%', year: '30 yr', amt: `₹${projectedLakhs} Lakh` },
   ]
 
   return (
-    <div className="cred-page relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-[420px] cred-glow pointer-events-none" />
-      <div className="relative px-6 pt-[122px] pb-10 flex flex-col min-h-[100dvh]">
+    <div className="cred-page flex flex-col relative overflow-hidden bg-smf-app">
+      {/* Dynamic ambient background */}
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-smf-teal-light rounded-full blur-[100px] pointer-events-none opacity-60" />
 
-        <div className="flex flex-col items-center text-center mb-8">
+      <div className="relative flex-1 flex flex-col px-6 pt-12 pb-8 justify-between overflow-y-auto">
+        
+        {/* Animated Checkmark and Success greeting */}
+        <div className="flex flex-col items-center text-center mt-4">
           <motion.div
-            initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', bounce: 0.5 }}
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
             className="relative mb-5"
           >
             {burst && [...Array(10)].map((_, i) => (
-              <motion.div key={i}
+              <motion.div
+                key={i}
                 className="absolute w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: i % 2 ? '#FFB800' : '#F47920', top: '50%', left: '50%' }}
+                style={{ backgroundColor: i % 2 ? '#B5731B' : '#0B5C47', top: '50%', left: '50%' }}
                 animate={{
-                  x: Math.cos((i / 10) * 6.28) * 70, y: Math.sin((i / 10) * 6.28) * 70,
-                  opacity: [1, 0], scale: [1, 0],
+                  x: Math.cos((i / 10) * 6.28) * 80,
+                  y: Math.sin((i / 10) * 6.28) * 80,
+                  opacity: [1, 0],
+                  scale: [1, 0],
                 }}
-                transition={{ duration: 1.1, delay: 0.2 + i * 0.04 }}
+                transition={{ duration: 1.2, delay: 0.1 + i * 0.03 }}
               />
             ))}
-            <div className="w-24 h-24 rounded-full bg-emerald-500/12 border-2 border-emerald-500 flex items-center justify-center">
-              <Check className="w-11 h-11 text-emerald-400" strokeWidth={3} />
+            <div className="w-22 h-22 rounded-full bg-smf-teal-light border border-smf-teal flex items-center justify-center shadow-sm">
+              <Check className="w-10 h-10 text-smf-teal" strokeWidth={3} />
             </div>
           </motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-            className="text-[30px] font-extrabold tracking-tightest">
-            SIP activated
+
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-[26px] font-bold text-smf-teal-dark font-display leading-tight"
+          >
+            You're in, {employee?.name ? employee.name.split(' ')[0] : 'Rajesh'}.
           </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-            className="text-white/45 text-[14px] mt-1.5">
-            Your wealth journey starts now, {employee?.name?.split(' ')[0]}.
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-smf-muted text-[13px] mt-1 font-body"
+          >
+            First investment on the 1st of next month.
           </motion.p>
         </div>
 
-        {/* SIP card */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-          className="rounded-3xl bg-orange-gradient p-6 mb-4">
-          <div className="text-black/55 text-[12px] font-medium">
-            {recommendation && recommendation.goals.length > 1
-              ? `${recommendation.goals.length} goals · ${fund?.shortName} + ${recommendation.goals.length - 1} more`
-              : fund?.name}
+        {/* Dynamic SIP and Projection card */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="bg-smf-teal-dark text-white rounded-[22px] p-6 mt-6 shadow-sm relative overflow-hidden text-left"
+        >
+          <div className="text-[12px] text-white/70 font-semibold uppercase tracking-wider font-body">
+            On track for
           </div>
-          <div className="text-black font-extrabold text-4xl tracking-tightest mt-1">{formatSIPAmount(sipAmt)}</div>
-          <div className="text-black/60 text-[13px] mt-0.5 font-medium">for {years} years</div>
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-black/15">
-            <Calendar className="w-4 h-4 text-black/55" />
-            <span className="text-black/70 text-[12px] font-medium">
-              First debit · {nextDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+          <div className="text-[34px] font-extrabold font-display leading-none mt-1">
+            ≈ ₹{projectedLakhs} lakh <span className="text-white/60 text-base font-normal">by 60</span>
+          </div>
+
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/10 font-body">
+            <Calendar className="w-4 h-4 text-white/60" />
+            <span className="text-white/80 text-[12px]">
+              First auto-debit · {nextDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
             </span>
           </div>
-          {mandate?.mandateId && (
-            <div className="text-black/40 text-[11px] mt-1 font-mono">Mandate {mandate.mandateId}</div>
-          )}
         </motion.div>
 
-        {/* milestones */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
-          className="cred-card p-5 mb-4">
-          <div className="cred-label mb-3.5">Your wealth milestones</div>
-          <div className="space-y-3.5">
-            {milestones.map(([pct, lbl, amt], i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-shriram-orange/12 flex items-center justify-center flex-shrink-0">
-                  <span className="text-shriram-orange text-[11px] font-bold">{pct}</span>
+        {/* Milestone Tracker Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="cred-card p-5 mt-4 bg-white border border-smf-line shadow-sm"
+        >
+          <div className="text-smf-muted text-[10.5px] font-bold uppercase tracking-wider mb-4">
+            Your wealth milestones
+          </div>
+
+          <div className="space-y-4">
+            {milestones.map((m, i) => (
+              <div key={i} className="flex items-center gap-3 font-body">
+                <div className="w-10 h-10 rounded-xl bg-smf-teal-light flex items-center justify-center shrink-0 border border-smf-teal/10">
+                  <span className="text-smf-teal text-[11px] font-extrabold">{m.pct}</span>
                 </div>
+                
                 <div className="flex-1">
-                  <div className="h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
-                    <motion.div className="h-full bg-shriram-orange rounded-full"
-                      initial={{ width: 0 }} animate={{ width: pct }}
-                      transition={{ delay: 0.7 + i * 0.15, duration: 0.8 }} />
+                  <div className="h-1.5 bg-smf-line rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-smf-teal rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: m.pct }}
+                      transition={{ delay: 0.7 + i * 0.15, duration: 0.8 }}
+                    />
                   </div>
                 </div>
+
                 <div className="text-right">
-                  <div className="text-white text-[12px] font-bold">{amt}</div>
-                  <div className="text-white/30 text-[10px]">{lbl}</div>
+                  <div className="text-smf-teal-dark text-[13px] font-bold font-display">{m.amt}</div>
+                  <div className="text-smf-muted text-[10.5px]">{m.year} marks</div>
                 </div>
               </div>
             ))}
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
-          className="cred-row px-4 py-3.5 mb-7">
-          <p className="text-white/45 text-[12px] leading-relaxed">
-            You&apos;ll get a <span className="text-white font-semibold">24-hour SMS</span> before each debit. Your SIP auto-escalates by 10% each April unless you change it.
-          </p>
+        {/* CTA and Replay link */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
+          className="mt-8 space-y-4"
+        >
+          <button
+            onClick={() => alert('Invite link shared via WhatsApp deep link!')}
+            className="cred-btn shadow-md font-body text-[14.5px] py-4 bg-smf-teal text-white hover:bg-smf-teal-dark"
+          >
+            Invite a colleague
+          </button>
+
+          <div className="text-center">
+            <button
+              onClick={reset}
+              className="text-smf-muted text-[12.5px] font-bold hover:text-smf-teal underline leading-none"
+            >
+              Replay from start
+            </button>
+          </div>
         </motion.div>
 
-        <div className="mt-auto pt-8">
-          <button onClick={goNext} className="cred-btn">
-            View my portfolio <ArrowRight className="w-[18px] h-[18px]" />
-          </button>
-        </div>
       </div>
     </div>
   )

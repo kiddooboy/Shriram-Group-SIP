@@ -5,12 +5,18 @@ import { useSIPStore } from '@/store/useSIPStore'
 import { JourneyStep } from '@/lib/types'
 
 const VISIBLE_STEPS: JourneyStep[] = [
-  'login', 'questions', 'ai-loading', 'recommendation', 'mandate', 'success',
+  'login', 'funds-select', 'intent-captured', 'goal-select', 'tuned-plan', 'kyc', 'activation', 'success',
 ]
 
 const STEP_NAMES: Record<string, string> = {
-  login: 'Verify', questions: 'Profile', 'ai-loading': 'AI Engine',
-  recommendation: 'Your Plan', mandate: 'Auto-debit', success: 'Done',
+  login: 'Verify',
+  'funds-select': 'Funds',
+  'intent-captured': 'Captured',
+  'goal-select': 'Goal',
+  'tuned-plan': 'AI Tuning',
+  kyc: 'KYC',
+  activation: 'Activate',
+  success: 'Done',
 }
 
 export default function ProgressBar() {

@@ -11,78 +11,92 @@
 }
 
 html {
-  background-color: #0A0A0B;
-  color: #fff;
-  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #ECE7DC;
+  color: #15201B;
+  font-family: 'Hanken Grotesk', 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  background-image: radial-gradient(circle at 1px 1px, rgba(11,92,71,0.06) 1px, transparent 0);
+  background-size: 22px 22px;
 }
 
 body {
   min-height: 100dvh;
   overflow-x: hidden;   /* clip horizontal only — vertical scroll stays free */
+  background: #ECE7DC;
 }
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(11, 92, 71, 0.16);
   border-radius: 999px;
 }
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-text-fill-color: white;
+  -webkit-text-fill-color: #15201B;
   -webkit-box-shadow: 0 0 0px 1000px transparent inset;
   transition: background-color 5000s ease-in-out 0s;
 }
 
 select { -webkit-appearance: none; }
 
-/* ── CRED-style component system ───────────────────────────────────────── */
+/* ── Shriram Mutual Fund brand custom style system (backward-compatible) ── */
 @layer components {
   .cred-page {
-    @apply bg-cred-black text-white;
+    @apply bg-smf-app text-smf-ink;
     min-height: 100dvh; /* adapts to mobile browser chrome */
+    font-family: 'Hanken Grotesk', sans-serif;
   }
-  /* soft orange glow behind hero areas */
+  /* soft glow */
   .cred-glow {
-    @apply bg-glow-orange;
+    background: radial-gradient(60% 50% at 50% 0%, rgba(11,92,71,0.08) 0%, rgba(11,92,71,0) 100%);
   }
   .cred-card {
-    @apply bg-white/[0.045] border border-white/[0.08] rounded-3xl;
+    @apply bg-white border border-smf-line rounded-3xl;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.03);
   }
   .cred-card-active {
-    @apply bg-white/[0.07] border border-shriram-orange;
+    @apply bg-white border-2 border-smf-teal rounded-3xl;
+    box-shadow: 0 8px 24px rgba(7,61,47,0.06);
+  }
+  .cred-card-active-amber {
+    @apply bg-smf-amber-light border-2 border-smf-amber rounded-3xl;
   }
   .cred-row {
-    @apply bg-white/[0.04] border border-white/[0.07] rounded-2xl;
+    @apply bg-white border border-smf-line rounded-2xl;
   }
-  /* primary CTA — CRED's signature white pill button */
+  /* primary CTA — Teal pill button */
   .cred-btn {
-    @apply w-full bg-white text-black font-bold py-[18px] rounded-2xl
+    @apply w-full bg-smf-teal text-white font-bold py-[18px] rounded-2xl
            flex items-center justify-center gap-2
            transition-transform duration-150 active:scale-[0.98]
-           disabled:opacity-30 disabled:active:scale-100;
+           hover:bg-smf-teal-dark
+           disabled:bg-smf-line disabled:text-smf-muted disabled:cursor-not-allowed disabled:active:scale-100;
+    font-family: 'Hanken Grotesk', sans-serif;
   }
   .cred-btn-accent {
-    @apply w-full bg-shriram-orange text-black font-bold py-[18px] rounded-2xl
-           flex items-center justify-center gap-2 shadow-orange-glow
+    @apply w-full bg-smf-amber text-white font-bold py-[18px] rounded-2xl
+           flex items-center justify-center gap-2
            transition-transform duration-150 active:scale-[0.98]
-           disabled:opacity-30 disabled:shadow-none disabled:active:scale-100;
+           hover:filter hover:brightness-[0.93]
+           disabled:bg-smf-line disabled:text-smf-muted disabled:cursor-not-allowed disabled:active:scale-100;
+    font-family: 'Hanken Grotesk', sans-serif;
   }
   .cred-btn-ghost {
-    @apply w-full text-white/45 text-sm font-medium py-3;
+    @apply w-full text-smf-muted text-sm font-semibold py-3 hover:text-smf-teal;
   }
   .cred-chip {
     @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-           text-xs font-medium tracking-wide uppercase;
+           text-xs font-semibold tracking-wide;
   }
   .cred-label {
-    @apply text-white/35 text-[11px] font-semibold uppercase tracking-[0.14em];
+    @apply text-smf-muted text-[11px] font-bold uppercase tracking-[0.14em];
   }
   .cred-h1 {
-    @apply text-[28px] leading-[1.12] font-extrabold tracking-tightest text-white;
+    @apply text-[24px] leading-[1.18] font-bold tracking-tight text-smf-teal-dark;
+    font-family: 'Bricolage Grotesque', sans-serif;
   }
 }
 
@@ -91,7 +105,7 @@ select { -webkit-appearance: none; }
   100% { background-position: 200% 0; }
 }
 .shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 75%);
+  background: linear-gradient(90deg, rgba(11,92,71,0.02) 25%, rgba(11,92,71,0.08) 50%, rgba(11,92,71,0.02) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.8s infinite;
 }

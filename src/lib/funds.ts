@@ -25,6 +25,29 @@ export const SHRIRAM_FUNDS: ShriramFund[] = [
     taxNote: 'Equity taxation when equity ≥ 65%: LTCG 12.5% after 1 year',
   },
   {
+    id: 'SELS',
+    name: 'Shriram ELSS Tax Saver Fund',
+    shortName: 'ELSS Tax Saver',
+    category: 'ELSS',
+    riskLevel: 'Very High',
+    riskScore: 4,
+    minHorizonMonths: 36,
+    maxHorizonMonths: 240,
+    expenseRatio: 1.90,
+    fiveYearReturn: 15.5,
+    threeYearReturn: 13.8,
+    oneYearReturn: 20.2,
+    aum: 430,
+    peerPercentile: 75,
+    goalTags: ['CHILD_FUTURE', 'RETIREMENT', 'HOME'],
+    description: 'Save tax under Section 80C while your money grows in equity. Features a mandatory 3-year lock-in, which is the shortest among all Section 80C options.',
+    assetMix: 'Pure equity (tax saving)',
+    bestFor: 'Tax savers looking for equity growth under Section 80C with a minimum 3-year lock-in.',
+    drawdownNote: 'High equity exposure with a 3-year lock-in, meaning you cannot withdraw during market dips.',
+    annualVolatility: 15,
+    taxNote: 'Section 80C eligible. LTCG at 12.5% after 1 year on withdrawal',
+  },
+  {
     id: 'SFC',
     name: 'Shriram Flexi Cap Fund',
     shortName: 'Flexi Cap',
@@ -171,7 +194,7 @@ export const FUND_BY_ID = Object.fromEntries(SHRIRAM_FUNDS.map(f => [f.id, f]))
 
 // The three growth funds the engine recommends from — one is shown to the user.
 // SMAF = Multi Asset (most defensive) · SAH = Aggressive Hybrid (balanced) · SFC = Flexi Cap (most aggressive)
-export const CORE_FUND_IDS = ['SMAF', 'SAH', 'SFC'] as const
+export const CORE_FUND_IDS = ['SMAF', 'SELS', 'SFC', 'SAH'] as const
 export const CORE_FUNDS = CORE_FUND_IDS.map(id => FUND_BY_ID[id])
 
 export function formatCurrency(amount: number): string {

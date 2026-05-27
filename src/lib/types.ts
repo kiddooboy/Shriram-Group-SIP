@@ -2,11 +2,12 @@
 export type JourneyStep =
   | 'welcome'
   | 'login'
-  | 'profile'
-  | 'questions'
-  | 'ai-loading'
-  | 'recommendation'
-  | 'mandate'
+  | 'funds-select'
+  | 'intent-captured'
+  | 'goal-select'
+  | 'tuned-plan'
+  | 'kyc'
+  | 'activation'
   | 'success'
   | 'dashboard'
 
@@ -119,13 +120,14 @@ export type FundCategory =
   | 'LIQUID'
   | 'OVERNIGHT'
   | 'SHORT_DURATION'
+  | 'ELSS'
 
 export interface ShriramFund {
   id: string
   name: string
   shortName: string
   category: FundCategory
-  riskLevel: 'Very Low' | 'Low' | 'Moderate' | 'Moderately High' | 'High'
+  riskLevel: 'Very Low' | 'Low' | 'Moderate' | 'Moderately High' | 'High' | 'Very High'
   riskScore: number
   minHorizonMonths: number
   maxHorizonMonths: number

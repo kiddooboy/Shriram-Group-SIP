@@ -86,7 +86,7 @@ export default function QuestionsStep() {
         {/* adaptive status */}
         <div className="flex items-center gap-3 mb-5">
           <button
-            onClick={() => answeredCount === 0 && setStep('profile')}
+            onClick={() => answeredCount === 0 && setStep('login')}
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition-opacity ${
               answeredCount === 0 ? 'bg-white/[0.06]' : 'bg-white/[0.03] opacity-30'
             }`}

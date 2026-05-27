@@ -3,19 +3,20 @@
 import { useSIPStore } from '@/store/useSIPStore'
 
 const STEP_LABELS: Record<string, string> = {
-  login:          'Verify',
-  profile:        'Profile',
-  questions:      'Profile Q&A',
-  'ai-loading':   'AI Engine',
-  recommendation: 'Your Plan',
-  mandate:        'Auto-debit',
-  success:        'Activated',
-  dashboard:      'Portfolio',
+  login:             'Verify',
+  'funds-select':    'Funds',
+  'intent-captured': 'Captured',
+  'goal-select':     'Goal',
+  'tuned-plan':      'Tuned Plan',
+  kyc:               'KYC',
+  activation:        'Activate',
+  success:           'Activated',
+  dashboard:         'Portfolio',
 }
 
 export default function Header() {
   const { currentStep, employee } = useSIPStore()
-  const showEmployee = ['profile', 'questions', 'ai-loading', 'recommendation', 'mandate', 'success', 'dashboard'].includes(currentStep)
+  const showEmployee = ['funds-select', 'intent-captured', 'goal-select', 'tuned-plan', 'kyc', 'activation', 'success', 'dashboard'].includes(currentStep)
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-cred-black/85 backdrop-blur-xl border-b border-white/[0.06]">

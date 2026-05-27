@@ -227,7 +227,7 @@ export default function RecommendationStep() {
   }
   function handleRetake() {
     restartQuestionnaire()
-    setStep('questions')
+    setStep('login')
   }
 
   return (

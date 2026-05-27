@@ -24,9 +24,25 @@ module.exports = {
           navy: '#1B3A6B',
           gold: '#FFD54F',
         },
+        // Shriram Mutual Fund brand custom color system
+        smf: {
+          teal: '#0B5C47',
+          'teal-dark': '#073D2F',
+          'teal-light': '#E8F2EE',
+          'teal-mid': '#1D9E75',
+          amber: '#B5731B',
+          'amber-light': '#FBF0DE',
+          ink: '#15201B',
+          muted: '#697772',
+          line: '#E4E9E6',
+          app: '#F7F4EE',
+          'bg-cream': '#ECE7DC',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Bricolage Grotesque', 'sans-serif'],
+        body: ['Hanken Grotesk', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       letterSpacing: {

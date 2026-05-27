@@ -4,194 +4,261 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowUpRight, Calendar, Target, BarChart3, RefreshCw, TrendingUp } from 'lucide-react'
 import { useSIPStore } from '@/store/useSIPStore'
-import { formatCurrency, formatSIPAmount } from '@/lib/funds'
+import { SHRIRAM_FUNDS } from '@/lib/funds'
 
 const GOAL_LABELS: Record<string, string> = {
-  EMERGENCY: 'Emergency Fund', BIG_PURCHASE: 'Big Purchase', HOME: 'Home',
-  CHILD_FUTURE: "Child's Future", RETIREMENT: 'Retirement',
+  EMERGENCY: 'Emergency Corpus', 
+  BIG_PURCHASE: 'Wealth Creation', 
+  HOME: 'Tax Saving',
+  CHILD_FUTURE: "Child Education", 
+  RETIREMENT: 'Retirement Planning',
 }
 
 export default function DashboardStep() {
-  const { employee, recommendation, adjustedSIP, adjustedFund, adjustedTenure, reset } = useSIPStore()
+  const { employee, selectedFundId, selectedGoal, tunedSIPAmount, reset } = useSIPStore()
   const [tab, setTab] = useState<'overview' | 'holdings' | 'alerts'>('overview')
 
-  const sipAmt = adjustedSIP ?? recommendation?.sipAmount ?? 500
-  const fund = adjustedFund ?? recommendation?.fund
-  const tenure = adjustedTenure ?? recommendation?.tenureMonths ?? 60
-  const totalCorpus = recommendation?.projectedCorpus ?? 0
-  const years = Math.round(tenure / 12)
-  const goal = recommendation?.primaryGoal ?? 'RETIREMENT'
+  const fund = SHRIRAM_FUNDS.find(f => f.id === selectedFundId) || SHRIRAM_FUNDS[0]
+  const amount = tunedSIPAmount || 500
+  
+  // Horizon and projections
+  const returnRate = fund.threeYearReturn || 11.0
+  const r = (returnRate / 100) / 12
+  const years = 30
+  const months = years * 12
+  const fv = amount * ((Math.pow(1 + r, months) - 1) / r) * (1 + r)
+  const projectedLakhs = Math.round(fv / 100000)
 
-  const invested = sipAmt
-  const currentValue = sipAmt * 1.012
+  const invested = amount
+  const currentValue = amount * 1.012
   const gainPct = (((currentValue - invested) / invested) * 100).toFixed(2)
   const nextDate = new Date()
   nextDate.setMonth(nextDate.getMonth() + 1, 1)
 
   return (
-    <div className="cred-page">
-      <div className="px-6 pt-[88px] pb-12">
-        {/* greeting */}
+    <div className="cred-page min-h-screen bg-smf-app font-body">
+      <div className="px-6 pt-12 pb-12 overflow-y-auto">
+        
+        {/* Greeting Section */}
         <div className="flex items-start justify-between mb-5">
           <div>
-            <div className="text-white/40 text-[13px]">Hello, {employee?.name?.split(' ')[0]}</div>
-            <h1 className="cred-h1 mt-0.5">Your portfolio</h1>
+            <div className="text-smf-muted text-[13px] font-bold">Hello, {employee?.name ? employee.name.split(' ')[0] : 'Rajesh'}</div>
+            <h1 className="text-[26px] font-extrabold text-smf-teal-dark mt-0.5 font-display tracking-tight leading-none">
+              Your portfolio
+            </h1>
           </div>
-          <button onClick={reset} className="w-10 h-10 rounded-xl cred-row flex items-center justify-center" title="Restart demo">
-            <RefreshCw className="w-4 h-4 text-white/60" />
+          <button 
+            onClick={reset} 
+            className="w-10 h-10 rounded-xl bg-white border border-smf-line flex items-center justify-center shadow-sm hover:border-smf-teal/30 active:scale-95 transition-all"
+            title="Restart demo"
+          >
+            <RefreshCw className="w-4 h-4 text-smf-muted" />
           </button>
         </div>
 
-        {/* value hero */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          className="cred-card p-6 mb-4">
-          <div className="cred-label">Current value</div>
-          <div className="text-white font-extrabold text-[40px] tracking-tightest leading-none mt-1.5">
-            {formatCurrency(Math.round(currentValue))}
+        {/* Current Value Hero Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 16 }} 
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white border border-smf-line rounded-[22px] p-6 mb-5 shadow-sm text-left relative overflow-hidden"
+        >
+          <div className="text-smf-muted text-[11px] font-bold uppercase tracking-wider">
+            Current portfolio value
           </div>
-          <div className="flex items-center gap-2 mt-2.5">
-            <div className="flex items-center gap-1 bg-emerald-500/15 rounded-full px-2 py-0.5">
-              <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-              <span className="text-emerald-400 text-[11px] font-bold">+{gainPct}%</span>
+          <div className="text-[38px] font-extrabold text-smf-teal-dark font-display tracking-tightest leading-none mt-1.5">
+            ₹{Math.round(currentValue).toLocaleString('en-IN')}
+          </div>
+          <div className="flex items-center gap-2 mt-3">
+            <div className="flex items-center gap-1 bg-emerald-50 text-smf-teal border border-smf-teal/10 rounded-full px-2.5 py-0.5">
+              <ArrowUpRight className="w-3.5 h-3.5 text-smf-teal" />
+              <span className="text-smf-teal text-[11px] font-extrabold">+{gainPct}%</span>
             </div>
-            <span className="text-white/35 text-[12px]">since SIP started</span>
+            <span className="text-smf-muted text-[12.5px]">since SIP started</span>
           </div>
-          <div className="grid grid-cols-3 gap-2 mt-5">
-            {[['Invested', formatCurrency(invested)], ['SIP', '₹' + sipAmt.toLocaleString('en-IN')], ['Target', formatCurrency(totalCorpus)]].map(([l, v], i) => (
-              <div key={i} className="bg-white/[0.03] rounded-xl py-2.5 px-1 text-center">
-                <div className="text-white/30 text-[10px]">{l}</div>
-                <div className="text-white font-bold text-[13px] mt-0.5">{v}</div>
+
+          <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-smf-line/60">
+            {[
+              ['Invested', `₹${invested.toLocaleString('en-IN')}`], 
+              ['Monthly SIP', `₹${amount.toLocaleString('en-IN')}`], 
+              ['Target', `₹${projectedLakhs} L`]
+            ].map(([l, v], i) => (
+              <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl py-2 px-1 text-center">
+                <div className="text-smf-muted text-[10px] font-bold">{l}</div>
+                <div className="text-smf-teal-dark font-bold text-[13px] mt-0.5 font-display">{v}</div>
               </div>
             ))}
           </div>
         </motion.div>
 
-        {/* tabs */}
-        <div className="flex bg-white/[0.04] rounded-2xl p-1 mb-5">
+        {/* Tabs switcher */}
+        <div className="flex bg-slate-100/80 border border-slate-200/50 rounded-2xl p-1 mb-5">
           {(['overview', 'holdings', 'alerts'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 rounded-xl text-[12px] font-semibold capitalize transition-all ${
-                tab === t ? 'bg-shriram-orange text-black' : 'text-white/35'
-              }`}>
+            <button 
+              key={t} 
+              onClick={() => setTab(t)}
+              className={`flex-1 py-2.5 rounded-xl text-[12.5px] font-bold capitalize transition-all duration-150 ${
+                tab === t ? 'bg-smf-teal text-white shadow-sm' : 'text-smf-muted hover:text-smf-teal'
+              }`}
+            >
               {t}
             </button>
           ))}
         </div>
 
+        {/* Tab views */}
         {tab === 'overview' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-            <div className="cred-card p-5">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 text-left">
+            
+            {/* Goal Progress */}
+            <div className="bg-white border border-smf-line rounded-[22px] p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
-                <Target className="w-4 h-4 text-shriram-orange" />
-                <span className="text-white font-semibold text-[13px]">Goal · {GOAL_LABELS[goal]}</span>
+                <Target className="w-4 h-4 text-smf-amber" />
+                <span className="text-smf-teal-dark font-bold text-[13.5px] font-display">
+                  Goal · {GOAL_LABELS[selectedGoal || ''] || 'Wealth Creation'}
+                </span>
               </div>
-              <div className="h-2.5 bg-white/[0.08] rounded-full overflow-hidden">
-                <motion.div className="h-full bg-orange-gradient rounded-full"
-                  initial={{ width: 0 }} animate={{ width: `${(currentValue / totalCorpus) * 100}%` }}
-                  transition={{ duration: 1 }} />
+              <div className="h-2.5 bg-smf-line rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-smf-teal rounded-full"
+                  initial={{ width: 0 }} 
+                  animate={{ width: `${(currentValue / (projectedLakhs * 100000)) * 100}%` }}
+                  transition={{ duration: 1 }} 
+                />
               </div>
-              <div className="text-white/30 text-[11px] mt-1.5 text-right">
-                {((currentValue / totalCorpus) * 100).toFixed(2)}% complete · {years} yr horizon
+              <div className="text-smf-muted text-[11px] mt-1.5 text-right font-bold">
+                {((currentValue / (projectedLakhs * 100000)) * 100).toFixed(4)}% complete · {years} yr horizon
               </div>
             </div>
 
-            <div className="cred-row px-4 py-3.5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-shriram-orange/12 flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-[18px] h-[18px] text-shriram-orange" />
+            {/* Next Debit */}
+            <div className="bg-white border border-smf-line rounded-2xl p-4.5 flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-smf-teal-light flex items-center justify-center shrink-0 border border-smf-teal/10">
+                  <Calendar className="w-5 h-5 text-smf-teal" />
+                </div>
+                <div>
+                  <div className="text-smf-teal-dark text-[13.5px] font-bold">Next SIP debit</div>
+                  <div className="text-smf-muted text-[11.5px] mt-0.5">
+                    {nextDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })} · ₹{amount.toLocaleString('en-IN')}/mo
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <div className="text-white text-[13px] font-semibold">Next SIP debit</div>
-                <div className="text-white/35 text-[11px]">{nextDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })} · {formatSIPAmount(sipAmt)}</div>
-              </div>
-              <span className="cred-chip bg-emerald-500/12 text-emerald-400">Active</span>
+              <span className="bg-emerald-50 text-smf-teal border border-smf-teal/10 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
+                Active
+              </span>
             </div>
 
-            <div className="cred-row px-4 py-3.5 flex items-start justify-between">
+            {/* Holding Row */}
+            <div className="bg-white border border-smf-line rounded-2xl p-4.5 flex items-start justify-between shadow-sm">
               <div>
-                <div className="cred-label mb-1">Fund</div>
-                <div className="text-white font-semibold text-[13px]">{fund?.name}</div>
-                <div className="text-white/35 text-[11px] mt-0.5">{fund?.riskLevel}</div>
+                <div className="text-[10px] text-smf-muted font-bold uppercase tracking-wider mb-1">Chosen Fund</div>
+                <div className="text-smf-teal-dark font-bold text-[14px] font-display">{fund.name}</div>
+                <div className="text-smf-muted text-[11.5px] mt-0.5">{fund.riskLevel} Risk</div>
               </div>
               <div className="text-right">
-                <div className="text-emerald-400 font-bold text-[14px]">+{fund?.threeYearReturn}%</div>
-                <div className="text-white/30 text-[10px]">3yr CAGR</div>
+                <div className="text-smf-teal font-extrabold text-[15px] font-display">+{fund.threeYearReturn}%</div>
+                <div className="text-smf-muted text-[10px]">3yr CAGR</div>
               </div>
             </div>
 
+            {/* AI step ups */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="cred-row px-4 py-3.5">
-                <BarChart3 className="w-5 h-5 text-shriram-orange mb-2" />
-                <div className="text-white text-[13px] font-semibold">Step up SIP</div>
-                <div className="text-white/30 text-[11px]">+10% from April</div>
+              <div className="bg-white border border-smf-line rounded-2xl p-4 shadow-sm">
+                <BarChart3 className="w-5 h-5 text-smf-amber mb-2" />
+                <div className="text-smf-teal-dark text-[13px] font-bold">Step up SIP</div>
+                <div className="text-smf-muted text-[11px] mt-0.5">+10% from April</div>
               </div>
-              <div className="cred-row px-4 py-3.5">
-                <TrendingUp className="w-5 h-5 text-shriram-orange mb-2" />
-                <div className="text-white text-[13px] font-semibold">Modify SIP</div>
-                <div className="text-white/30 text-[11px]">Change amount / fund</div>
+              <div className="bg-white border border-smf-line rounded-2xl p-4 shadow-sm">
+                <TrendingUp className="w-5 h-5 text-smf-teal mb-2" />
+                <div className="text-smf-teal-dark text-[13px] font-bold">Modify SIP</div>
+                <div className="text-smf-muted text-[11px] mt-0.5">Change amount / fund</div>
               </div>
             </div>
           </motion.div>
         )}
 
+        {/* Holdings Tab */}
         {tab === 'holdings' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-            <div className="cred-card p-5">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 text-left">
+            <div className="bg-white border border-smf-line rounded-[22px] p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className="w-4 h-4 text-shriram-orange" />
-                <span className="text-white font-semibold text-[13px]">Allocation</span>
+                <BarChart3 className="w-4 h-4 text-smf-teal" />
+                <span className="text-smf-teal-dark font-bold text-[13.5px] font-display">Allocation</span>
               </div>
-              <div className="flex justify-between mb-1.5">
-                <span className="text-white text-[13px]">{fund?.shortName}</span>
-                <span className="text-white font-bold text-[13px]">100%</span>
+              <div className="flex justify-between mb-1.5 font-bold text-[13px]">
+                <span className="text-smf-teal-dark font-display">{fund.shortName}</span>
+                <span className="text-smf-teal">100%</span>
               </div>
-              <div className="h-1.5 bg-white/[0.08] rounded-full"><div className="h-full w-full bg-shriram-orange rounded-full" /></div>
-              <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-white/[0.07]">
-                {[['Units', (currentValue / 18.45).toFixed(3)], ['Avg NAV', '₹18.45'],
-                  ['P&L', '+₹' + Math.round(currentValue - invested)], ['XIRR', `~${fund?.threeYearReturn}%`]].map(([l, v], i) => (
+              <div className="h-1.5 bg-smf-line rounded-full overflow-hidden">
+                <div className="h-full w-full bg-smf-teal rounded-full" />
+              </div>
+              <div className="grid grid-cols-2 gap-y-4 gap-x-2 mt-5 pt-5 border-t border-smf-line/60">
+                {[
+                  ['Units Owned', (currentValue / 18.45).toFixed(3)], 
+                  ['Avg Purchase NAV', '₹18.45'],
+                  ['Total P&L', `+₹${Math.round(currentValue - invested)}`], 
+                  ['XIRR', `~${fund.threeYearReturn}%`]
+                ].map(([l, v], i) => (
                   <div key={i}>
-                    <div className="text-white/30 text-[11px]">{l}</div>
-                    <div className={`font-bold text-[14px] ${l === 'P&L' ? 'text-emerald-400' : 'text-white'}`}>{v}</div>
+                    <div className="text-smf-muted text-[11px] font-bold">{l}</div>
+                    <div className={`font-extrabold text-[14.5px] font-display mt-0.5 ${l === 'Total P&L' ? 'text-smf-teal' : 'text-smf-teal-dark'}`}>
+                      {v}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="cred-card overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-white/[0.07]">
-                <span className="text-white font-semibold text-[13px]">Recent transactions</span>
+
+            <div className="bg-white border border-smf-line rounded-[22px] overflow-hidden shadow-sm">
+              <div className="px-5 py-3.5 border-b border-smf-line/60 bg-slate-50/50">
+                <span className="text-smf-teal-dark font-bold text-[13px] font-display">Recent transactions</span>
               </div>
-              <div className="px-5 py-3.5 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-500/12 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <div className="px-5 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-smf-teal/10 flex items-center justify-center shrink-0">
+                    <TrendingUp className="w-4 h-4 text-smf-teal" />
+                  </div>
+                  <div>
+                    <div className="text-smf-teal-dark font-bold text-[13px]">SIP Purchase</div>
+                    <div className="text-smf-muted text-[11px] mt-0.5">
+                      {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {fund.shortName}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <div className="text-white text-[13px] font-medium">SIP Purchase</div>
-                  <div className="text-white/30 text-[11px]">{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {fund?.shortName}</div>
+                <div className="text-smf-teal-dark font-extrabold text-[14px] font-display">
+                  ₹{amount.toLocaleString('en-IN')}
                 </div>
-                <div className="text-white font-bold text-[13px]">₹{sipAmt.toLocaleString('en-IN')}</div>
               </div>
             </div>
           </motion.div>
         )}
 
+        {/* Alerts Tab */}
         {tab === 'alerts' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2.5">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2.5 text-left">
             {[
-              ['📅', 'SIP reminder set', `Auto-debit on the 1st · ${formatSIPAmount(sipAmt)}`],
-              ['📲', '24-hour pre-debit SMS', 'An SMS the day before each debit (RBI mandate)'],
-              ['📈', 'Annual step-up', 'Each April, the AI suggests a step-up from your increment'],
-              ['🎯', 'Goal tracking active', `${GOAL_LABELS[goal]} — ${years} year horizon`],
+              ['📅', 'SIP reminder set', `Direct payroll salary auto-debit on the 1st · ₹${amount.toLocaleString('en-IN')}/mo`],
+              ['📲', '24-hour pre-debit SMS', 'A notification the day before each debit (RBI compliance mandated)'],
+              ['📈', 'AI Annual Step-up', 'Automatic increment matching suggestions computed each April'],
+              ['🎯', 'Goal compounding live', `${GOAL_LABELS[selectedGoal || ''] || 'Wealth Creation'} — ${years} year horizon`],
             ].map(([e, t, s], i) => (
-              <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
-                className="cred-row px-4 py-3.5 flex items-start gap-3">
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, x: -10 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                transition={{ delay: i * 0.08 }}
+                className="bg-white border border-smf-line rounded-2xl p-4 flex items-start gap-3 shadow-sm"
+              >
                 <span className="text-xl leading-none">{e}</span>
                 <div>
-                  <div className="text-white text-[13px] font-semibold">{t}</div>
-                  <div className="text-white/35 text-[11px] mt-0.5">{s}</div>
+                  <div className="text-smf-teal-dark font-bold text-[13.5px] font-display">{t}</div>
+                  <div className="text-smf-muted text-[11.5px] mt-0.5 leading-normal">{s}</div>
                 </div>
               </motion.div>
             ))}
           </motion.div>
         )}
+
       </div>
     </div>
   )
