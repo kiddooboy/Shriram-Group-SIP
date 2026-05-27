@@ -41,8 +41,18 @@ function initSchema(db: Database.Database) {
       created_at    TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
     );
 
-    CREATE INDEX IF NOT EXISTS idx_reg_emp ON registrations(employee_id);
-    CREATE INDEX IF NOT EXISTS idx_sip_emp ON sip_intents(employee_id);
+    CREATE TABLE IF NOT EXISTS otp_sessions (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      mobile      TEXT    NOT NULL,
+      otp         TEXT    NOT NULL,
+      expires_at  INTEGER NOT NULL,
+      verified    INTEGER NOT NULL DEFAULT 0,
+      created_at  TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_reg_emp  ON registrations(employee_id);
+    CREATE INDEX IF NOT EXISTS idx_sip_emp  ON sip_intents(employee_id);
+    CREATE INDEX IF NOT EXISTS idx_otp_mob  ON otp_sessions(mobile);
   `)
 }
 
@@ -105,4 +115,39 @@ export function listRegistrations(): RegistrationRow[] {
 /** List all SIP intents (admin / demo) */
 export function listSipIntents(): SipIntentRow[] {
   return getDb().prepare('SELECT * FROM sip_intents ORDER BY id DESC LIMIT 100').all() as SipIntentRow[]
+}
+
+// ── OTP helpers ───────────────────────────────────────────────────────────────
+
+/** Count OTPs sent to a mobile in the last N minutes (rate limiting) */
+export function countRecentOtps(mobile: string, withinMinutes: number): number {
+  const since = Math.floor(Date.now() / 1000) - withinMinutes * 60
+  const row = getDb()
+    .prepare('SELECT COUNT(*) as cnt FROM otp_sessions WHERE mobile = ? AND created_at >= datetime(?, \'unixepoch\')')
+    .get(mobile, since) as { cnt: number }
+  return row.cnt
+}
+
+/** Create a new OTP session */
+export function createOtpSession(mobile: string, otp: string, expiryMinutes: number): void {
+  const expiresAt = Math.floor(Date.now() / 1000) + expiryMinutes * 60
+  getDb()
+    .prepare('INSERT INTO otp_sessions (mobile, otp, expires_at) VALUES (?, ?, ?)')
+    .run(mobile, otp, expiresAt)
+}
+
+/** Verify OTP — returns success or an error string */
+export function verifyOtpSession(mobile: string, otp: string): { success: boolean; error?: string } {
+  const db = getDb()
+  const now = Math.floor(Date.now() / 1000)
+  const row = db
+    .prepare('SELECT * FROM otp_sessions WHERE mobile = ? AND verified = 0 ORDER BY id DESC LIMIT 1')
+    .get(mobile) as { id: number; otp: string; expires_at: number } | undefined
+
+  if (!row)                    return { success: false, error: 'OTP not found — please request a new one.' }
+  if (row.expires_at < now)    return { success: false, error: 'OTP has expired — please request a new one.' }
+  if (row.otp !== otp)         return { success: false, error: 'Incorrect OTP — please try again.' }
+
+  db.prepare('UPDATE otp_sessions SET verified = 1 WHERE id = ?').run(row.id)
+  return { success: true }
 }
