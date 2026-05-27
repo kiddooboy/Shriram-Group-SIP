@@ -109,11 +109,12 @@ export default function LoginStep() {
       const code = err?.code ?? 'unknown'
       setError(
         code === 'auth/invalid-phone-number'   ? 'Invalid phone number — please check and try again.' :
-        code === 'auth/too-many-requests'       ? 'Too many attempts. Please wait a few minutes.' :
-        code === 'auth/quota-exceeded'          ? 'Daily SMS quota reached. Try again tomorrow.' :
-        code === 'auth/unauthorized-domain'     ? 'Domain not authorised — add shriramgsip.online in Firebase Console → Auth → Settings → Authorised domains.' :
-        code === 'auth/captcha-check-failed'    ? 'reCAPTCHA check failed. Please refresh the page and try again.' :
-        `Failed to send OTP (${code}). Please try again.`
+        code === 'auth/too-many-requests'       ? 'Too many attempts. Please wait a few minutes and try again.' :
+        code === 'auth/quota-exceeded'          ? 'Daily SMS quota reached. Please try again tomorrow.' :
+        code === 'auth/billing-not-enabled'     ? 'SMS service not configured. Please contact support.' :
+        code === 'auth/unauthorized-domain'     ? 'This domain is not authorised. Please contact support.' :
+        code === 'auth/captcha-check-failed'    ? 'Security check failed. Please refresh the page and try again.' :
+        'Failed to send OTP. Please refresh the page and try again.'
       )
     } finally {
       setSending(false)
@@ -190,8 +191,8 @@ export default function LoginStep() {
       setPhase('otp')
       setError(
         err?.code === 'auth/invalid-verification-code' ? 'Incorrect OTP — please check and try again.' :
-        err?.code === 'auth/code-expired'              ? 'OTP expired. Please request a new one.' :
-        `Verification failed (${err?.code ?? 'unknown'}).`
+        err?.code === 'auth/code-expired'              ? 'OTP has expired. Please request a new one.' :
+        'Verification failed. Please try again.'
       )
     }
   }
