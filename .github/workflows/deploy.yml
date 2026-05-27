@@ -29,8 +29,9 @@ jobs:
             echo "→ Ensuring native build tools (for better-sqlite3)"
             sudo apt-get install -y build-essential python3-dev 2>/dev/null | tail -1 || true
 
-            echo "→ Installing dependencies"
-            npm install --no-audit --no-fund
+            echo "→ Installing dependencies (clean)"
+            rm -rf node_modules
+            npm ci --no-audit --no-fund
 
             echo "→ Building"
             npm run build
