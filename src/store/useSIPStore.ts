@@ -31,9 +31,11 @@ interface SIPStore {
   selectedFundId: string | null
   selectedGoal: string | null
   tunedSIPAmount: number
+  consentChecked: boolean
   setSelectedFundId: (id: string | null) => void
   setSelectedGoal: (goal: string | null) => void
   setTunedSIPAmount: (amt: number) => void
+  setConsentChecked: (checked: boolean) => void
 
   // Adaptive questionnaire (M8 belief state)
   questionnaire: QuestionnaireState
@@ -117,6 +119,7 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
   selectedFundId: null,
   selectedGoal: null,
   tunedSIPAmount: 500,
+  consentChecked: false,
 
   setSelectedFundId: (id) => set({ selectedFundId: id }),
   setSelectedGoal: (goal) => {
@@ -131,6 +134,7 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
     set({ selectedGoal: goal, questionnaire: q })
   },
   setTunedSIPAmount: (amt) => set({ tunedSIPAmount: amt }),
+  setConsentChecked: (checked) => set({ consentChecked: checked }),
 
   questionnaire: initQuestionnaire(),
   currentQuestion: 'FAMILY',
@@ -170,6 +174,7 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
       selectedFundId: null,
       selectedGoal: null,
       tunedSIPAmount: 500,
+      consentChecked: false,
       questionnaire: initQuestionnaire(),
       currentQuestion: 'FAMILY',
       recommendation: null,

@@ -18,7 +18,6 @@ export default function TunedPlanStep() {
     setAdjustedTenure,
     setAdjustedFund,
     setRecommendation,
-    goNext 
   } = useSIPStore()
 
   // Find the selected fund, default to SMAF
@@ -48,12 +47,12 @@ export default function TunedPlanStep() {
     setTunedSIPAmount(val)
   }
 
-  function handleContinue() {
+  // Auto-sync tuned selections directly to the store for dynamic calculations
+  useEffect(() => {
     setAdjustedSIP(amount)
     setAdjustedTenure(months)
     setAdjustedFund(fund)
-    goNext()
-  }
+  }, [amount, fund, months, setAdjustedSIP, setAdjustedTenure, setAdjustedFund])
 
   // Goal name formatted for display
   const goalLabelMap: Record<string, string> = {
@@ -136,16 +135,6 @@ export default function TunedPlanStep() {
               ≈ ₹{projectedLakhs} lakh
             </div>
           </div>
-        </div>
-
-        {/* CTA */}
-        <div className="mt-8">
-          <button
-            onClick={handleContinue}
-            className="cred-btn-accent shadow-md transition-transform"
-          >
-            Looks good — continue
-          </button>
         </div>
 
       </div>

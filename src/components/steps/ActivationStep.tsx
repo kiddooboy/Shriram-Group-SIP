@@ -1,14 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ShieldCheck, Info } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { useSIPStore } from '@/store/useSIPStore'
 import { SHRIRAM_FUNDS } from '@/lib/funds'
 
 export default function ActivationStep() {
-  const { employee, selectedFundId, selectedGoal, tunedSIPAmount, goNext } = useSIPStore()
-  const [checked, setChecked] = useState(false)
+  const { employee, selectedFundId, selectedGoal, tunedSIPAmount, consentChecked, setConsentChecked } = useSIPStore()
 
   const fund = SHRIRAM_FUNDS.find(f => f.id === selectedFundId) || SHRIRAM_FUNDS[0]
   const amount = tunedSIPAmount || 500
@@ -80,11 +78,11 @@ export default function ActivationStep() {
           </div>
 
           {/* Consent Checkbox */}
-          <label className="flex gap-3 bg-white border border-smf-line rounded-2xl p-4.5 mt-4 shadow-sm cursor-pointer select-none font-body">
+          <label className="flex gap-3 bg-white border border-smf-line rounded-2xl p-4 mt-4 shadow-sm cursor-pointer select-none font-body">
             <input
               type="checkbox"
-              checked={checked}
-              onChange={(e) => setChecked(e.target.checked)}
+              checked={consentChecked}
+              onChange={(e) => setConsentChecked(e.target.checked)}
               className="w-5 h-5 accent-smf-teal mt-0.5 shrink-0"
             />
             <span className="text-smf-ink text-[12.5px] leading-relaxed">
@@ -97,17 +95,6 @@ export default function ActivationStep() {
             <ShieldCheck className="w-4 h-4 text-smf-teal" />
             <span>Securely processed under Shriram Group's Payroll Integration specs</span>
           </div>
-        </div>
-
-        {/* CTA */}
-        <div className="mt-8">
-          <button
-            onClick={goNext}
-            disabled={!checked}
-            className="cred-btn-accent shadow-md transition-transform"
-          >
-            Authorise &amp; start
-          </button>
         </div>
 
       </div>

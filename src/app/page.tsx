@@ -26,7 +26,7 @@ const STEP_LIST = [
 ]
 
 export default function Home() {
-  const { currentStep } = useSIPStore()
+  const { currentStep, selectedGoal, consentChecked, goNext, setStep } = useSIPStore()
 
   const isDashboard = currentStep === 'dashboard'
   const isLogin = currentStep === 'login'
@@ -51,6 +51,71 @@ export default function Home() {
       case 'success':         return <SuccessStep />
       case 'dashboard':       return <DashboardStep />
       default:                return <WelcomeStep />
+    }
+  }
+
+  // Determine if global footbar should render
+  const showFootbar = ['welcome', 'intent-captured', 'goal-select', 'tuned-plan', 'activation'].includes(currentStep)
+
+  function renderFootbar() {
+    switch (currentStep) {
+      case 'welcome':
+        return (
+          <button
+            onClick={goNext}
+            className="cred-btn shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
+          >
+            See my fund options
+          </button>
+        )
+      case 'intent-captured':
+        return (
+          <div className="flex flex-col gap-2 w-full">
+            <button
+              onClick={goNext}
+              className="cred-btn-accent shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
+            >
+              Continue setup (2 min)
+            </button>
+            <button
+              onClick={() => setStep('dashboard')}
+              className="cred-btn-ghost text-center text-xs font-bold text-smf-muted hover:text-smf-teal"
+            >
+              Finish setup later
+            </button>
+          </div>
+        )
+      case 'goal-select':
+        return (
+          <button
+            onClick={goNext}
+            disabled={!selectedGoal}
+            className="cred-btn-accent shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
+          >
+            Continue
+          </button>
+        )
+      case 'tuned-plan':
+        return (
+          <button
+            onClick={goNext}
+            className="cred-btn-accent shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
+          >
+            Looks good — continue
+          </button>
+        )
+      case 'activation':
+        return (
+          <button
+            onClick={goNext}
+            disabled={!consentChecked}
+            className="cred-btn-accent shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
+          >
+            Authorise &amp; start
+          </button>
+        )
+      default:
+        return null
     }
   }
 
@@ -92,7 +157,7 @@ export default function Home() {
           <div
             className={`text-xs font-bold px-4 py-1.5 rounded-full border transition-colors ${
               !isPhase2
-                ? 'bg-smf-teal text-white border-smf-teal'
+                ? 'bg-smf-teal text-white border-smf-teal shadow-sm'
                 : 'bg-white text-smf-muted border-smf-line'
             }`}
           >
@@ -101,7 +166,7 @@ export default function Home() {
           <div
             className={`text-xs font-bold px-4 py-1.5 rounded-full border transition-colors ${
               isPhase2 && stepNumber !== 8
-                ? 'bg-smf-amber text-white border-smf-amber'
+                ? 'bg-smf-amber text-white border-smf-amber shadow-sm'
                 : 'bg-white text-smf-muted border-smf-line'
             }`}
           >
@@ -112,7 +177,7 @@ export default function Home() {
 
       {/* Phone Simulator Wrapper */}
       <div className="w-full max-w-[390px] bg-white rounded-[34px] p-2 border border-black/5 shadow-[0_24px_60px_-20px_rgba(7,61,47,0.25),0_4px_14px_rgba(0,0,0,0.05)] relative">
-        <div className="bg-smf-app rounded-[26px] h-[720px] overflow-hidden flex flex-col relative">
+        <div className="bg-smf-app rounded-[26px] h-[720px] overflow-hidden flex flex-col relative justify-between">
           
           {/* Statusbar & Internal Progress Indicator */}
           {!isLogin && (
@@ -139,18 +204,25 @@ export default function Home() {
             </div>
           )}
 
-          {/* Active step screen viewport */}
-          <div className="flex-1 min-h-0 flex flex-col">
+          {/* Active step screen viewport (Scrollable Area) */}
+          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto scroll-container">
             <motion.div
               key={currentStep}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col min-h-full"
             >
               {renderStep()}
             </motion.div>
           </div>
+
+          {/* Global Footbar */}
+          {showFootbar && (
+            <div className="shrink-0 p-5 bg-white/95 backdrop-blur-md border-t border-smf-line shadow-sm flex flex-col gap-2 z-30">
+              {renderFootbar()}
+            </div>
+          )}
           
         </div>
       </div>

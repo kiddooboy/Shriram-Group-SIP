@@ -85,17 +85,13 @@ export default function WelcomeStep() {
           </div>
         </div>
 
-        {/* CTA Section */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="shrink-0"
+          className="shrink-0 mt-4"
         >
-          <button onClick={goNext} className="cred-btn shadow-md hover:translate-y-[-1px] transition-transform">
-            See my fund options <ArrowRight className="w-[18px] h-[18px]" />
-          </button>
-          <p className="text-smf-muted text-[11px] text-center mt-4 leading-relaxed font-body">
+          <p className="text-smf-muted text-[11px] text-center leading-relaxed font-body">
             Auto-enrolled provisional choice at ₹500/month · modify or opt out anytime. Distributed by Shriram Finance Ltd.
             Mutual fund investments are subject to market risks.
           </p>

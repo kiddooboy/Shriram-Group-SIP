@@ -45,8 +45,16 @@ select { -webkit-appearance: none; }
 /* ── Shriram Mutual Fund brand custom style system (backward-compatible) ── */
 @layer components {
   .cred-page {
-    @apply bg-smf-app text-smf-ink w-full h-full;
+    @apply bg-smf-app text-smf-ink w-full min-h-full;
     font-family: 'Hanken Grotesk', sans-serif;
+  }
+  /* hidden scrollbars */
+  .scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+  .scroll-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
   /* soft glow */
   .cred-glow {

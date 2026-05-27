@@ -33,7 +33,7 @@ export default function GoalSelectStep() {
   return (
     <div className="cred-page flex flex-col relative overflow-hidden bg-smf-app">
       {/* Scrollable Container */}
-      <div className="relative flex-1 flex flex-col px-6 pt-12 pb-8 overflow-y-auto justify-between">
+      <div className="relative flex-1 flex flex-col px-6 pt-5 pb-5 overflow-y-auto">
         
         {/* Top Text */}
         <div>
@@ -76,16 +76,7 @@ export default function GoalSelectStep() {
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="mt-8">
-          <button
-            onClick={goNext}
-            disabled={!selected}
-            className="cred-btn-accent shadow-md transition-transform"
-          >
-            Continue
-          </button>
-        </div>
+        {/* CTA is now rendered globally by the parent footbar */}
 
       </div>
     </div>

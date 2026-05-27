@@ -67,27 +67,7 @@ export default function IntentCapturedStep() {
           </motion.div>
         </div>
 
-        {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="space-y-3 mt-6"
-        >
-          <button
-            onClick={goNext}
-            className="w-full bg-smf-amber text-white font-bold py-[18px] rounded-2xl flex items-center justify-center gap-2 hover:filter hover:brightness-[0.93] transition-transform active:scale-[0.98] shadow-sm text-[15px]"
-          >
-            Continue setup (2 min) <ArrowRight className="w-5 h-5" />
-          </button>
-          
-          <button
-            onClick={() => setStep('dashboard')}
-            className="w-full text-smf-muted text-[13.5px] font-bold py-3 hover:text-smf-teal text-center"
-          >
-            Finish setup later
-          </button>
-        </motion.div>
+        {/* Action Buttons are now rendered globally by the parent footbar */}
         
       </div>
     </div>
