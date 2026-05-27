@@ -26,3 +26,8 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# SQLite WAL temp files
+data/*.db-shm
+data/*.db-wal
+.env.local
