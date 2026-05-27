@@ -24,7 +24,10 @@ jobs:
 
             echo "→ Pulling latest main"
             git fetch origin main
+            # Stash .env.local so git reset doesn't wipe Firebase keys
+            cp .env.local /tmp/.env.local.bak 2>/dev/null || true
             git reset --hard origin/main
+            cp /tmp/.env.local.bak .env.local 2>/dev/null || true
 
             echo "→ Ensuring native build tools (for better-sqlite3)"
             sudo apt-get install -y build-essential python3-dev 2>/dev/null | tail -1 || true
