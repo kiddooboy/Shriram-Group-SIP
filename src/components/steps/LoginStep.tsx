@@ -1,33 +1,120 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, AlertCircle, ShieldCheck, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, AlertCircle, ShieldCheck, RefreshCw } from 'lucide-react'
+import {
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
+} from 'firebase/auth'
+import { getFirebaseAuth } from '@/lib/firebase'
 import { useSIPStore, createDefaultEmployee } from '@/store/useSIPStore'
 
 type Phase = 'form' | 'otp' | 'verifying'
 
+declare global {
+  interface Window { recaptchaVerifier?: RecaptchaVerifier }
+}
+
 export default function LoginStep() {
   const { setEmpId, setEmployeeName, setMobile, setEmployee, setRegistrationId, goNext } = useSIPStore()
 
-  const [phase, setPhase] = useState<Phase>('form')
-  const [empId, setEmpIdLocal] = useState('')
-  const [name, setName] = useState('')
-  const [mobile, setMobileLocal] = useState('')
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
-  const [error, setError] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [phase, setPhase]             = useState<Phase>('form')
+  const [empId, setEmpIdLocal]        = useState('')
+  const [name, setName]               = useState('')
+  const [mobile, setMobileLocal]      = useState('')
+  const [otp, setOtp]                 = useState(['', '', '', '', '', ''])
+  const [error, setError]             = useState('')
+  const [sending, setSending]         = useState(false)
+  const [resendCooldown, setResend]   = useState(0)
 
-  // ── Form submission ──────────────────────────────────────────────────────
-  function handleFormSubmit() {
-    if (!empId.trim()) { setError('Please enter your Employee ID'); return }
-    if (!name.trim()) { setError('Please enter your full name'); return }
-    if (!/^\d{10}$/.test(mobile)) { setError('Please enter a valid 10-digit mobile number'); return }
-    setError('')
-    setPhase('otp')
+  const confirmRef = useRef<ConfirmationResult | null>(null)
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current)
+    }
+  }, [])
+
+  // ── Setup invisible reCAPTCHA ────────────────────────────────────────────
+  function setupRecaptcha() {
+    const fbAuth = getFirebaseAuth()
+    if (window.recaptchaVerifier) {
+      try { window.recaptchaVerifier.clear() } catch (_) {}
+    }
+    window.recaptchaVerifier = new RecaptchaVerifier(fbAuth, 'recaptcha-container', {
+      size: 'invisible',
+      callback: () => {},
+    })
   }
 
-  // ── OTP handling ─────────────────────────────────────────────────────────
+  // ── Send OTP via Firebase ────────────────────────────────────────────────
+  async function handleSendOTP() {
+    if (!empId.trim())              { setError('Please enter your Employee ID'); return }
+    if (!name.trim())               { setError('Please enter your full name'); return }
+    if (!/^\d{10}$/.test(mobile))  { setError('Please enter a valid 10-digit mobile number'); return }
+    setError('')
+    setSending(true)
+
+    try {
+      setupRecaptcha()
+      const verifier = window.recaptchaVerifier!
+      const fbAuth = getFirebaseAuth()
+      const result = await signInWithPhoneNumber(fbAuth, `+91${mobile}`, verifier)
+      confirmRef.current = result
+      setPhase('otp')
+      startResendCooldown()
+    } catch (err: any) {
+      console.error('Send OTP error:', err)
+      // Clear bad recaptcha so next attempt gets a fresh one
+      try { window.recaptchaVerifier?.clear(); window.recaptchaVerifier = undefined } catch (_) {}
+      const msg = err?.code === 'auth/invalid-phone-number'
+        ? 'Invalid phone number — check and try again.'
+        : err?.code === 'auth/too-many-requests'
+        ? 'Too many attempts. Please wait a few minutes and try again.'
+        : err?.code === 'auth/quota-exceeded'
+        ? 'SMS quota exceeded. Please try again later.'
+        : 'Failed to send OTP. Please try again.'
+      setError(msg)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  function startResendCooldown() {
+    setResend(30)
+    cooldownRef.current = setInterval(() => {
+      setResend(prev => {
+        if (prev <= 1) { clearInterval(cooldownRef.current!); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  async function handleResend() {
+    if (resendCooldown > 0) return
+    setOtp(['', '', '', '', '', ''])
+    setError('')
+    setSending(true)
+    try {
+      setupRecaptcha()
+      const verifier = window.recaptchaVerifier!
+      const fbAuth = getFirebaseAuth()
+      const result = await signInWithPhoneNumber(fbAuth, `+91${mobile}`, verifier)
+      confirmRef.current = result
+      startResendCooldown()
+    } catch (err: any) {
+      try { window.recaptchaVerifier?.clear(); window.recaptchaVerifier = undefined } catch (_) {}
+      setError('Failed to resend OTP. Please try again.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  // ── OTP input handling ───────────────────────────────────────────────────
   function handleOtpChange(idx: number, val: string) {
     if (!/^\d?$/.test(val)) return
     const next = [...otp]; next[idx] = val; setOtp(next)
@@ -35,44 +122,64 @@ export default function LoginStep() {
     if (next.every(d => d !== '')) handleVerify(next)
   }
 
+  // ── Verify OTP with Firebase ─────────────────────────────────────────────
   async function handleVerify(digits = otp) {
-    if (digits.join('').length < 6) { setError('Please enter the complete 6-digit OTP'); return }
+    const code = digits.join('')
+    if (code.length < 6) { setError('Please enter the complete 6-digit OTP'); return }
+    if (!confirmRef.current) { setError('Session expired — please resend OTP'); return }
     setError('')
     setPhase('verifying')
 
-    // Save registration to DB
     try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employeeId: empId.trim().toUpperCase(), name: name.trim(), mobile: mobile.trim() }),
-      })
-      const data = await res.json()
-      if (data.success && data.registration?.id) {
-        setRegistrationId(data.registration.id)
+      await confirmRef.current.confirm(code)
+      // OTP verified — save to DB
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employeeId: empId.trim().toUpperCase(),
+            name: name.trim(),
+            mobile: mobile.trim(),
+          }),
+        })
+        const data = await res.json()
+        if (data.success && data.registration?.id) {
+          setRegistrationId(data.registration.id)
+        }
+      } catch (_) {
+        // Non-blocking — DB save failure doesn't block the flow
       }
-    } catch (_) {
-      // Non-blocking — continue even if DB save fails in demo
+
+      // Seed store and advance
+      setEmpId(empId.trim().toUpperCase())
+      setEmployeeName(name.trim())
+      setMobile(mobile.trim())
+      setEmployee(createDefaultEmployee(empId.trim().toUpperCase(), name.trim(), mobile.trim()))
+      setTimeout(() => goNext(), 1200)
+
+    } catch (err: any) {
+      setPhase('otp')
+      const msg = err?.code === 'auth/invalid-verification-code'
+        ? 'Incorrect OTP — please check and try again.'
+        : err?.code === 'auth/code-expired'
+        ? 'OTP has expired. Please request a new one.'
+        : 'Verification failed. Please try again.'
+      setError(msg)
     }
-
-    // Seed store
-    setEmpId(empId.trim().toUpperCase())
-    setEmployeeName(name.trim())
-    setMobile(mobile.trim())
-    const emp = createDefaultEmployee(empId.trim().toUpperCase(), name.trim(), mobile.trim())
-    setEmployee(emp)
-
-    setTimeout(() => goNext(), 1600)
   }
 
   return (
     <div className="min-h-[calc(100vh-120px)] bg-shriram-cream flex items-center justify-center px-4 py-12">
+      {/* Invisible reCAPTCHA anchor — must exist in DOM before signInWithPhoneNumber */}
+      <div id="recaptcha-container" />
+
       <div className="w-full max-w-md">
         {/* Step indicator */}
         <div className="flex items-center gap-2 justify-center mb-8">
           {['Details', 'Verify OTP', 'Done'].map((s, i) => {
             const active = (phase === 'form' && i === 0) || (phase === 'otp' && i === 1) || (phase === 'verifying' && i === 2)
-            const done = (phase === 'otp' && i === 0) || (phase === 'verifying' && i <= 1)
+            const done   = (phase === 'otp' && i === 0) || (phase === 'verifying' && i <= 1)
             return (
               <div key={s} className="flex items-center gap-2">
                 <div className={`flex items-center gap-1.5 text-[12px] font-semibold transition-colors ${active ? 'text-shriram-dark' : done ? 'text-shriram-gold' : 'text-shriram-muted/40'}`}>
@@ -87,7 +194,6 @@ export default function LoginStep() {
           })}
         </div>
 
-        {/* Card */}
         <motion.div
           key={phase}
           initial={{ opacity: 0, y: 12 }}
@@ -97,7 +203,7 @@ export default function LoginStep() {
         >
           <AnimatePresence mode="wait">
 
-            {/* ── Employee details form ───────────────────────────────── */}
+            {/* ── Employee details form ──────────────────────────────────── */}
             {phase === 'form' && (
               <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <span className="eyebrow-dark">Step 1 of 3 · Identity</span>
@@ -105,27 +211,24 @@ export default function LoginStep() {
                   Employee sign-in
                 </h2>
                 <p className="text-shriram-muted text-[13.5px] mb-8">
-                  Enter your details to get started. We'll send a verification OTP to your mobile.
+                  Enter your details — we'll send a real OTP to your mobile number.
                 </p>
 
                 <div className="space-y-5">
-                  {/* Employee ID */}
                   <div>
                     <label className="field-label">Employee ID</label>
                     <input
-                      id="emp-id-input"
                       type="text"
                       value={empId}
                       autoFocus
                       autoComplete="off"
                       onChange={e => { setEmpIdLocal(e.target.value.toUpperCase()); setError('') }}
                       onKeyDown={e => e.key === 'Enter' && document.getElementById('name-input')?.focus()}
-                      placeholder="e.g. SF10042 or any ID"
+                      placeholder="e.g. SF10042"
                       className="field-input font-mono tracking-widest"
                     />
                   </div>
 
-                  {/* Full Name */}
                   <div>
                     <label className="field-label">Full Name</label>
                     <input
@@ -140,7 +243,6 @@ export default function LoginStep() {
                     />
                   </div>
 
-                  {/* Mobile */}
                   <div>
                     <label className="field-label">Mobile Number</label>
                     <div className="relative">
@@ -155,7 +257,7 @@ export default function LoginStep() {
                         maxLength={10}
                         autoComplete="tel"
                         onChange={e => { const v = e.target.value.replace(/\D/g, ''); setMobileLocal(v); setError('') }}
-                        onKeyDown={e => e.key === 'Enter' && handleFormSubmit()}
+                        onKeyDown={e => e.key === 'Enter' && handleSendOTP()}
                         placeholder="10-digit number"
                         className="field-input pl-[68px]"
                       />
@@ -170,20 +272,23 @@ export default function LoginStep() {
                 )}
 
                 <button
-                  id="login-continue-btn"
-                  onClick={handleFormSubmit}
-                  className="btn-gold w-full mt-8 py-4 text-[15px] rounded-xl"
+                  onClick={handleSendOTP}
+                  disabled={sending}
+                  className="btn-gold w-full mt-8 py-4 text-[15px] rounded-xl disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Send OTP <ArrowRight className="w-4 h-4" />
+                  {sending
+                    ? <><span className="w-4 h-4 border-2 border-shriram-dark/30 border-t-shriram-dark rounded-full animate-spin" /> Sending OTP…</>
+                    : <>Send OTP <ArrowRight className="w-4 h-4" /></>
+                  }
                 </button>
 
                 <p className="text-shriram-muted text-[11.5px] text-center mt-4 leading-relaxed">
-                  OTP will be sent to your registered mobile. Any ID is accepted for this demo.
+                  A 6-digit OTP will be sent to your mobile via SMS.
                 </p>
               </motion.div>
             )}
 
-            {/* ── OTP verification ────────────────────────────────────── */}
+            {/* ── OTP entry ─────────────────────────────────────────────── */}
             {phase === 'otp' && (
               <motion.div key="otp" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <span className="eyebrow-dark">Step 2 of 3 · Verify</span>
@@ -191,7 +296,7 @@ export default function LoginStep() {
                   Enter OTP
                 </h2>
                 <p className="text-shriram-muted text-[13.5px] mb-8">
-                  A 6-digit OTP was sent to{' '}
+                  6-digit OTP sent to{' '}
                   <span className="font-bold text-shriram-dark">+91 {mobile.slice(0, 5)}·····</span>
                 </p>
 
@@ -218,9 +323,6 @@ export default function LoginStep() {
                     />
                   ))}
                 </div>
-                <p className="text-shriram-muted text-[12px] mb-2">
-                  Demo: enter any 6 digits.
-                </p>
 
                 {error && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 mt-3 text-red-600 text-[13px] bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">
@@ -231,21 +333,36 @@ export default function LoginStep() {
                 <button onClick={() => handleVerify()} className="btn-gold w-full mt-7 py-4 text-[15px] rounded-xl">
                   Verify &amp; continue <ArrowRight className="w-4 h-4" />
                 </button>
-                <button onClick={() => { setPhase('form'); setOtp(['','','','','','']); setError('') }} className="btn-ghost w-full text-center mt-3 py-2">
-                  ← Back to details
-                </button>
+
+                {/* Resend */}
+                <div className="flex items-center justify-between mt-4">
+                  <button
+                    onClick={() => { setPhase('form'); setOtp(['','','','','','']); setError('') }}
+                    className="btn-ghost text-[13px] py-1"
+                  >
+                    ← Change number
+                  </button>
+                  <button
+                    onClick={handleResend}
+                    disabled={resendCooldown > 0 || sending}
+                    className="flex items-center gap-1.5 text-[13px] font-semibold text-shriram-gold disabled:text-shriram-muted/40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
+                  </button>
+                </div>
               </motion.div>
             )}
 
-            {/* ── Verifying loader ─────────────────────────────────────── */}
+            {/* ── Verifying ─────────────────────────────────────────────── */}
             {phase === 'verifying' && (
               <motion.div key="verifying" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-10 text-center">
                 <div className="relative mb-6">
                   <div className="w-16 h-16 rounded-full border-[3px] border-shriram-line border-t-shriram-gold animate-spin" />
                   <ShieldCheck className="w-7 h-7 text-shriram-gold absolute inset-0 m-auto" />
                 </div>
-                <p className="text-shriram-dark font-bold text-[16px]">Verifying identity…</p>
-                <p className="text-shriram-muted text-[13px] mt-1.5">Confirming your details with HR system</p>
+                <p className="text-shriram-dark font-bold text-[16px]">Verifying OTP…</p>
+                <p className="text-shriram-muted text-[13px] mt-1.5">Confirming with Firebase</p>
               </motion.div>
             )}
 
