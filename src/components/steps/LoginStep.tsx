@@ -38,9 +38,9 @@ export default function LoginStep() {
   }
 
   return (
-    <div className="cred-page relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-[300px] cred-glow pointer-events-none" />
-      <div className="relative px-6 pt-[140px] pb-10 flex flex-col min-h-[100dvh]">
+    <div className="cred-page relative overflow-hidden bg-smf-app">
+      <div className="absolute top-0 left-0 right-0 h-[220px] bg-smf-teal-light rounded-full blur-[80px] pointer-events-none opacity-50" />
+      <div className="relative px-6 pt-[60px] pb-8 flex flex-col flex-1 justify-between">
         <AnimatePresence mode="wait">
           {phase === 'empid' && (
             <motion.div key="empid" className="flex-1 flex flex-col" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }}>
