@@ -29,6 +29,12 @@ jobs:
             git reset --hard origin/main
             cp /tmp/.env.local.bak .env.local 2>/dev/null || true
 
+            echo "→ Injecting Fast2SMS API key into .env.local"
+            touch .env.local
+            grep -v '^FAST2SMS_API_KEY=' .env.local > .env.local.tmp 2>/dev/null || true
+            echo "FAST2SMS_API_KEY=${{ secrets.FAST2SMS_API_KEY }}" >> .env.local.tmp
+            mv .env.local.tmp .env.local
+
             echo "→ Ensuring native build tools (for better-sqlite3)"
             sudo apt-get install -y build-essential python3-dev 2>/dev/null | tail -1 || true
 
