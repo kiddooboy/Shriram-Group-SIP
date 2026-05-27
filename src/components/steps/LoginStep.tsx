@@ -71,13 +71,16 @@ export default function LoginStep() {
       console.error('Send OTP error:', err)
       // Clear bad recaptcha so next attempt gets a fresh one
       try { window.recaptchaVerifier?.clear(); window.recaptchaVerifier = undefined } catch (_) {}
-      const msg = err?.code === 'auth/invalid-phone-number'
+      const code = err?.code ?? 'unknown'
+      const msg = code === 'auth/invalid-phone-number'
         ? 'Invalid phone number — check and try again.'
-        : err?.code === 'auth/too-many-requests'
+        : code === 'auth/too-many-requests'
         ? 'Too many attempts. Please wait a few minutes and try again.'
-        : err?.code === 'auth/quota-exceeded'
+        : code === 'auth/quota-exceeded'
         ? 'SMS quota exceeded. Please try again later.'
-        : 'Failed to send OTP. Please try again.'
+        : code === 'auth/unauthorized-domain'
+        ? 'Domain not authorised in Firebase — add shriramgsip.online to Firebase Console → Authentication → Settings → Authorised domains.'
+        : `Failed to send OTP (${code}). Please try again.`
       setError(msg)
     } finally {
       setSending(false)
