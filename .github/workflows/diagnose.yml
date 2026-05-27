@@ -1,0 +1,41 @@
+name: Diagnose OTP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH diagnostics
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 5m
+          script: |
+            cd ~/shriram-group-sip
+
+            echo "===== .env.local (key presence only) ====="
+            if grep -q '^FAST2SMS_API_KEY=' .env.local; then
+              KEY=$(grep '^FAST2SMS_API_KEY=' .env.local | cut -d= -f2)
+              echo "FAST2SMS_API_KEY present, length=${#KEY}"
+            else
+              echo "FAST2SMS_API_KEY MISSING from .env.local"
+            fi
+
+            echo ""
+            echo "===== last 40 OTP log lines ====="
+            pm2 logs shriram-sip --nostream --lines 200 2>/dev/null | grep -i otp | tail -40 || echo "(no OTP lines found)"
+
+            echo ""
+            echo "===== live Fast2SMS API test (route=otp) ====="
+            KEY=$(grep '^FAST2SMS_API_KEY=' .env.local | cut -d= -f2)
+            curl -s "https://www.fast2sms.com/dev/bulkV2?authorization=${KEY}&route=otp&variables_values=123456&flash=0&numbers=9999999999" || echo "(curl failed)"
+            echo ""
+
+            echo "===== live Fast2SMS wallet check ====="
+            curl -s "https://www.fast2sms.com/dev/wallet?authorization=${KEY}" || echo "(wallet curl failed)"
+            echo ""
+            echo "===== done ====="
