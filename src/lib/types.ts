@@ -4,6 +4,7 @@ export type JourneyStep =
   | 'login'
   | 'funds-select'
   | 'intent-captured'
+  | 'link-sent'
   | 'goal-select'
   | 'tuned-plan'
   | 'kyc'

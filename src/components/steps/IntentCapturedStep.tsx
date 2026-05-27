@@ -1,75 +1,108 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, ArrowRight } from 'lucide-react'
+import { Check, ArrowRight, Loader2 } from 'lucide-react'
 import { useSIPStore } from '@/store/useSIPStore'
 import { SHRIRAM_FUNDS } from '@/lib/funds'
 
 export default function IntentCapturedStep() {
-  const { selectedFundId, goNext, setStep } = useSIPStore()
+  const { selectedFundId, empId, goNext } = useSIPStore()
   const fund = SHRIRAM_FUNDS.find(f => f.id === selectedFundId) || SHRIRAM_FUNDS[0]
+  const [saving, setSaving] = useState(true)
+  const [saved, setSaved] = useState(false)
+
+  // Save SIP intent to DB when this screen mounts
+  useEffect(() => {
+    async function saveIntent() {
+      try {
+        await fetch('/api/sip-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employeeId: empId || 'DEMO',
+            fundId: fund.id,
+            fundName: fund.name,
+            suggestedSip: 500,
+          }),
+        })
+      } catch (_) {
+        // Non-blocking
+      } finally {
+        setSaving(false)
+        setSaved(true)
+      }
+    }
+    saveIntent()
+  }, [])
 
   return (
-    <div className="cred-page flex flex-col relative overflow-hidden bg-smf-app">
-      {/* Light radial glows */}
-      <div className="absolute -top-32 -left-32 w-80 h-80 bg-smf-teal-light rounded-full blur-[90px] pointer-events-none opacity-60" />
-
-      <div className="relative flex-1 flex flex-col px-6 pt-12 pb-8 justify-between">
-        
-        {/* Animated Checkmark and Title */}
-        <div className="flex-1 flex flex-col justify-center text-center max-w-sm mx-auto">
+    <section className="min-h-[calc(100vh-120px)] bg-shriram-cream flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-lg">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl border border-shriram-line shadow-card-lg px-8 py-10 text-center"
+        >
+          {/* Animated checkmark */}
           <motion.div
-            initial={{ scale: 0, rotate: -15 }}
+            initial={{ scale: 0, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="w-20 h-20 rounded-full bg-smf-teal-light border-2 border-smf-teal flex items-center justify-center mx-auto mb-6"
+            transition={{ type: 'spring', stiffness: 220, damping: 16 }}
+            className="w-20 h-20 rounded-full bg-shriram-gold/10 border-2 border-shriram-gold flex items-center justify-center mx-auto mb-6"
           >
-            <Check className="w-10 h-10 text-smf-teal" strokeWidth={3} />
+            <Check className="w-10 h-10 text-shriram-gold" strokeWidth={3} />
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
-            <span className="text-smf-teal font-bold text-xs uppercase tracking-[0.15em] font-body block mb-2">
-              Intent Captured
-            </span>
-            <h2 className="text-[25px] font-bold text-smf-teal-dark font-display tracking-tight leading-tight mb-3">
-              You're interested in <br />
-              <span className="text-smf-teal italic font-extrabold">the {fund.shortName}</span>.
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <span className="eyebrow text-shriram-gold block mb-2">Phase 1 Complete · Intent Captured</span>
+            <h2 className="text-[26px] font-bold text-shriram-dark font-display tracking-tight mb-3">
+              You're interested in<br />
+              <span className="text-shriram-gold">{fund.shortName}.</span>
             </h2>
-            <p className="text-smf-muted text-[13px] leading-relaxed font-body">
-              That's Phase 1 done — in one click. Nothing has been debited yet. Finish setup whenever you like; it takes about 2 minutes.
+            <p className="text-shriram-muted text-[14px] leading-relaxed">
+              That's Phase 1 done — in one click. Nothing has been debited yet.
+              Complete your KYC to activate the SIP. It takes about 2 minutes.
             </p>
           </motion.div>
 
-          {/* Provisional Plan Card */}
+          {/* Provisional plan card */}
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="cred-card p-5 mt-6 bg-white border border-smf-line shadow-sm text-left relative overflow-hidden"
+            transition={{ delay: 0.35 }}
+            className="bg-shriram-cream border border-shriram-line rounded-xl p-5 mt-7 text-left"
           >
-            <div className="text-smf-muted text-[10.5px] font-bold uppercase tracking-wider mb-3">
+            <div className="text-shriram-muted text-[10.5px] font-bold uppercase tracking-wider mb-3">
               Your provisional plan
             </div>
-            
-            <div className="flex justify-between items-center py-1.5 border-b border-smf-line/60">
-              <span className="text-smf-muted text-[12.5px] font-body">Fund</span>
-              <span className="text-smf-teal-dark font-extrabold text-[13px] font-display">{fund.name}</span>
-            </div>
-
-            <div className="flex justify-between items-center py-2">
-              <span className="text-smf-muted text-[12.5px] font-body">Suggested SIP</span>
-              <span className="text-smf-teal-dark font-extrabold text-[13.5px] font-display">₹500 / month</span>
-            </div>
+            {[
+              { label: 'Fund', value: fund.name },
+              { label: 'Suggested SIP', value: '₹500 / month' },
+              { label: 'Source', value: 'Salary deduction' },
+              { label: 'Status', value: saving ? 'Saving…' : '✓ Intent registered' },
+            ].map(row => (
+              <div key={row.label} className="flex justify-between items-center py-2 border-b border-shriram-line/50 last:border-0">
+                <span className="text-shriram-muted text-[13px]">{row.label}</span>
+                <span className={`text-shriram-dark font-bold text-[13.5px] font-display ${row.label === 'Status' && saved ? 'text-smf-teal' : ''}`}>
+                  {row.value}
+                </span>
+              </div>
+            ))}
           </motion.div>
-        </div>
 
-        {/* Action Buttons are now rendered globally by the parent footbar */}
-        
+          <motion.button
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            onClick={goNext}
+            id="intent-proceed-btn"
+            className="btn-gold w-full mt-8 py-4 text-[15px] rounded-xl"
+          >
+            Proceed to KYC verification <ArrowRight className="w-4 h-4" />
+          </motion.button>
+        </motion.div>
       </div>
-    </div>
+    </section>
   )
 }

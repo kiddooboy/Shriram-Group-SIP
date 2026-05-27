@@ -17,17 +17,27 @@ import {
 } from '@/lib/questionnaire'
 
 interface SIPStore {
-  // Journey
+  // ── Journey ──────────────────────────────────────────────────────────────
   currentStep: JourneyStep
   setStep: (step: JourneyStep) => void
   goNext: () => void
   goBack: () => void
 
-  // Employee
+  // ── Identity (user-entered — no mock lookup needed) ───────────────────
+  empId: string
+  employeeName: string
+  mobile: string
+  registrationId: number | null
+  setEmpId: (id: string) => void
+  setEmployeeName: (name: string) => void
+  setMobile: (mobile: string) => void
+  setRegistrationId: (id: number) => void
+
+  // ── Legacy employee profile (kept for AI engine compatibility) ────────
   employee: EmployeeProfile | null
   setEmployee: (emp: EmployeeProfile) => void
 
-  // Two-Phase Selections
+  // ── Two-Phase Selections ──────────────────────────────────────────────
   selectedFundId: string | null
   selectedGoal: string | null
   tunedSIPAmount: number
@@ -37,18 +47,18 @@ interface SIPStore {
   setTunedSIPAmount: (amt: number) => void
   setConsentChecked: (checked: boolean) => void
 
-  // Adaptive questionnaire (M8 belief state)
+  // ── Adaptive questionnaire (M8 belief state) ─────────────────────────
   questionnaire: QuestionnaireState
   currentQuestion: QuestionCode | null
   answerQuestion: (code: QuestionCode, value: QAnswer) => void
-  advanceQuestionnaire: () => void   // → returns next question or marks done
+  advanceQuestionnaire: () => void
   restartQuestionnaire: () => void
 
-  // AI Recommendation
+  // ── AI Recommendation ─────────────────────────────────────────────────
   recommendation: AIRecommendation | null
   setRecommendation: (rec: AIRecommendation) => void
 
-  // Adjusted values
+  // ── Adjusted values ───────────────────────────────────────────────────
   adjustedSIP: number | null
   adjustedTenure: number | null
   adjustedFund: ShriramFund | null
@@ -56,35 +66,44 @@ interface SIPStore {
   setAdjustedTenure: (months: number) => void
   setAdjustedFund: (fund: ShriramFund) => void
 
-  // Mandate
+  // ── Mandate ───────────────────────────────────────────────────────────
   mandate: SIPMandate | null
   setMandate: (mandate: SIPMandate) => void
 
   reset: () => void
 }
 
+// Phase 1 only main flow — Phase 2 steps exist but are future/separate flow
 const STEP_ORDER: JourneyStep[] = [
-  'welcome', 'login', 'funds-select', 'intent-captured',
-  'goal-select', 'tuned-plan', 'kyc', 'activation', 'success', 'dashboard',
+  'welcome', 'login', 'funds-select', 'intent-captured', 'link-sent',
 ]
 
 const GOAL_HORIZONS: Record<string, number> = {
-  EMERGENCY: 2,
-  BIG_PURCHASE: 3,
-  HOME: 7,
-  CHILD_FUTURE: 12,
-  RETIREMENT: 20,
+  EMERGENCY: 2, BIG_PURCHASE: 3, HOME: 7, CHILD_FUTURE: 12, RETIREMENT: 20,
+}
+const GOAL_TARGETS: Record<string, number> = {
+  EMERGENCY: 150000, BIG_PURCHASE: 500000, HOME: 5000000,
+  CHILD_FUTURE: 3000000, RETIREMENT: 20000000,
 }
 
-const GOAL_TARGETS: Record<string, number> = {
-  EMERGENCY: 150000,
-  BIG_PURCHASE: 500000,
-  HOME: 5000000,
-  CHILD_FUTURE: 3000000,
-  RETIREMENT: 20000000,
+// Default synthetic employee profile for AI engine (used when no HRMS data available)
+function createDefaultEmployee(empId: string, name: string, mobile: string): EmployeeProfile {
+  return {
+    empId,
+    name,
+    age: 32,
+    cityTier: 'TIER2',
+    designation: 'Associate',
+    location: 'Chennai',
+    entity: 'Shriram Finance',
+    email: `${empId.toLowerCase()}@shriram.com`,
+    mobile,
+    kycStatus: 'KYC_REGISTERED',
+  }
 }
 
 export const useSIPStore = create<SIPStore>((set, get) => ({
+  // ── Journey ──────────────────────────────────────────────────────────────
   currentStep: 'welcome',
   setStep: (step) => set({ currentStep: step }),
   goNext: () => {
@@ -96,9 +115,20 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
     if (idx > 0) set({ currentStep: STEP_ORDER[idx - 1] })
   },
 
+  // ── Identity ──────────────────────────────────────────────────────────
+  empId: '',
+  employeeName: '',
+  mobile: '',
+  registrationId: null,
+  setEmpId: (id) => set({ empId: id }),
+  setEmployeeName: (name) => set({ employeeName: name }),
+  setMobile: (mobile) => set({ mobile }),
+  setRegistrationId: (id) => set({ registrationId: id }),
+
+  // ── Legacy employee profile ───────────────────────────────────────────
   employee: null,
   setEmployee: (emp) => {
-    // Seed default answers to have the questionnaire belief state fully initialized for the AI Engine
+    // Seed default answers to have the questionnaire fully initialized for AI engine
     let q = initQuestionnaire()
     q = recordAnswer(q, 'FAMILY', 'COUPLE')
     q = recordAnswer(q, 'CASHFLOW', { takehome: 'TH_30_50', expenses: 'EX_20', emi: 'EMI_10' })
@@ -116,26 +146,23 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
     set({ employee: emp, questionnaire: q })
   },
 
+  // ── Two-Phase Selections ──────────────────────────────────────────────
   selectedFundId: null,
   selectedGoal: null,
   tunedSIPAmount: 500,
   consentChecked: false,
-
   setSelectedFundId: (id) => set({ selectedFundId: id }),
   setSelectedGoal: (goal) => {
-    if (!goal) {
-      set({ selectedGoal: null })
-      return
-    }
+    if (!goal) { set({ selectedGoal: null }); return }
     const horizon = GOAL_HORIZONS[goal] || 7
     const target = GOAL_TARGETS[goal] || 1000000
-    // Record selection directly into questionnaire answers to drive the AI recommendation calculations
     const q = recordAnswer(get().questionnaire, 'GOALS', [{ type: goal as any, horizonYears: horizon, targetAmount: target }])
     set({ selectedGoal: goal, questionnaire: q })
   },
   setTunedSIPAmount: (amt) => set({ tunedSIPAmount: amt }),
   setConsentChecked: (checked) => set({ consentChecked: checked }),
 
+  // ── Questionnaire ─────────────────────────────────────────────────────
   questionnaire: initQuestionnaire(),
   currentQuestion: 'FAMILY',
   answerQuestion: (code, value) => {
@@ -154,9 +181,11 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
   restartQuestionnaire: () =>
     set({ questionnaire: initQuestionnaire(), currentQuestion: 'FAMILY', recommendation: null }),
 
+  // ── AI Recommendation ─────────────────────────────────────────────────
   recommendation: null,
   setRecommendation: (rec) => set({ recommendation: rec }),
 
+  // ── Adjusted values ───────────────────────────────────────────────────
   adjustedSIP: null,
   adjustedTenure: null,
   adjustedFund: null,
@@ -164,23 +193,20 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
   setAdjustedTenure: (months) => set({ adjustedTenure: months }),
   setAdjustedFund: (fund) => set({ adjustedFund: fund }),
 
+  // ── Mandate ───────────────────────────────────────────────────────────
   mandate: null,
   setMandate: (mandate) => set({ mandate }),
 
-  reset: () =>
-    set({
-      currentStep: 'welcome',
-      employee: null,
-      selectedFundId: null,
-      selectedGoal: null,
-      tunedSIPAmount: 500,
-      consentChecked: false,
-      questionnaire: initQuestionnaire(),
-      currentQuestion: 'FAMILY',
-      recommendation: null,
-      adjustedSIP: null,
-      adjustedTenure: null,
-      adjustedFund: null,
-      mandate: null,
-    }),
+  reset: () => set({
+    currentStep: 'welcome',
+    empId: '', employeeName: '', mobile: '', registrationId: null,
+    employee: null,
+    selectedFundId: null, selectedGoal: null, tunedSIPAmount: 500, consentChecked: false,
+    questionnaire: initQuestionnaire(), currentQuestion: 'FAMILY',
+    recommendation: null, adjustedSIP: null, adjustedTenure: null, adjustedFund: null,
+    mandate: null,
+  }),
 }))
+
+// Helper exported for LoginStep to build and seed the employee profile
+export { createDefaultEmployee }

@@ -8,57 +8,56 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // CRED-style ink palette
-        cred: {
-          black: '#0A0A0B',
-          base: '#0E0E10',
-          card: '#161618',
-          'card-hi': '#1F1F22',
-          line: 'rgba(255,255,255,0.08)',
-        },
+        // ── Shriram AMC Website Brand ───────────────────────────────────────
         shriram: {
-          // accent — golden yellow
-          orange: '#FFC107',
-          'orange-dark': '#E0A800',
-          'orange-light': '#FFF8E1',
-          navy: '#1B3A6B',
-          gold: '#FFD54F',
+          gold:        '#F5A500',   // primary CTA gold
+          'gold-dark': '#D4900A',   // hover gold
+          'gold-light':'#FFF8E1',   // gold tint bg
+          dark:        '#1C1C1C',   // header / footer
+          charcoal:    '#2D2D2D',   // secondary dark
+          cream:       '#F5F5F0',   // page background
+          'off-white': '#FAFAF8',   // card background
+          muted:       '#6B7280',   // body copy
+          line:        '#E5E7EB',   // borders
         },
-        // Shriram Mutual Fund brand custom color system
+        // ── Legacy SMF palette (kept for fund cards etc.) ───────────────────
         smf: {
-          teal: '#0B5C47',
+          teal:        '#0B5C47',
           'teal-dark': '#073D2F',
-          'teal-light': '#E8F2EE',
-          'teal-mid': '#1D9E75',
-          amber: '#B5731B',
-          'amber-light': '#FBF0DE',
-          ink: '#15201B',
-          muted: '#697772',
-          line: '#E4E9E6',
-          app: '#F7F4EE',
-          'bg-cream': '#ECE7DC',
+          'teal-light':'#E8F2EE',
+          'teal-mid':  '#1D9E75',
+          amber:       '#B5731B',
+          'amber-light':'#FBF0DE',
+          ink:         '#15201B',
+          muted:       '#697772',
+          line:        '#E4E9E6',
+          app:         '#F7F4EE',
+          'bg-cream':  '#ECE7DC',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Bricolage Grotesque', 'sans-serif'],
-        body: ['Hanken Grotesk', 'sans-serif'],
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans:    ['Inter', 'Hanken Grotesk', 'system-ui', 'sans-serif'],
+        display: ['Bricolage Grotesque', 'Inter', 'sans-serif'],
+        body:    ['Hanken Grotesk', 'Inter', 'sans-serif'],
+        mono:    ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       letterSpacing: {
         tightest: '-0.04em',
       },
       backgroundImage: {
-        'orange-gradient': 'linear-gradient(135deg, #FFC107 0%, #FFD54F 100%)',
-        'orange-soft': 'linear-gradient(135deg, rgba(255,193,7,0.18) 0%, rgba(255,213,79,0.06) 100%)',
-        'glow-orange': 'radial-gradient(60% 50% at 50% 0%, rgba(255,193,7,0.20) 0%, rgba(255,193,7,0) 100%)',
+        'gold-gradient':  'linear-gradient(135deg, #F5A500 0%, #FFD54F 100%)',
+        'dark-gradient':  'linear-gradient(135deg, #1C1C1C 0%, #2D2D2D 100%)',
+        'hero-pattern':   "radial-gradient(circle at 1px 1px, rgba(245,165,0,0.06) 1px, transparent 0)",
+        'cream-pattern':  "radial-gradient(circle at 1px 1px, rgba(11,92,71,0.04) 1px, transparent 0)",
       },
       boxShadow: {
-        'cred': '0 8px 40px rgba(0,0,0,0.55)',
-        'orange-glow': '0 8px 36px rgba(255,193,7,0.30)',
+        'gold':   '0 8px 36px rgba(245,165,0,0.25)',
+        'card':   '0 4px 24px rgba(0,0,0,0.07)',
+        'card-lg':'0 16px 48px rgba(0,0,0,0.10)',
       },
       animation: {
         'spin-slow': 'spin 3s linear infinite',
+        'pulse-soft':'pulse 2s ease-in-out infinite',
       },
     },
   },

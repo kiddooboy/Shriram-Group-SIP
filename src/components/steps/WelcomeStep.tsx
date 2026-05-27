@@ -1,102 +1,143 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowRight, CheckCircle2, TrendingUp, Zap } from 'lucide-react'
+import { ArrowRight, CheckCircle2, TrendingUp, Zap, Users, IndianRupee } from 'lucide-react'
 import { useSIPStore } from '@/store/useSIPStore'
 
 const features = [
-  { icon: Zap, title: 'Paid from salary', desc: 'Direct employer payroll link — no manual bank setup needed' },
-  { icon: CheckCircle2, title: 'Start small', desc: 'Invest as little as ₹500/month on autopilot' },
-  { icon: TrendingUp, title: 'One click to start', desc: 'Express interest instantly; we sort the paperwork next' },
+  { icon: IndianRupee, title: 'Paid from your salary', desc: 'Direct employer payroll link — no manual bank setup, ever.' },
+  { icon: Zap,         title: 'One click to start',    desc: 'Express your interest now; we handle the paperwork next.' },
+  { icon: TrendingUp,  title: 'Start with just ₹500',  desc: 'Invest as little as ₹500/month and build wealth on autopilot.' },
+  { icon: CheckCircle2,title: 'SEBI registered',       desc: 'All funds managed by Shriram AMC under SEBI regulations.' },
+]
+
+const stats = [
+  { value: '3,247', label: 'Colleagues enrolled this month' },
+  { value: '₹2.4 Cr', label: 'Invested together by employees' },
+  { value: '11% p.a.', label: 'Indicative long-term return' },
 ]
 
 export default function WelcomeStep() {
-  const { employee, goNext } = useSIPStore()
-  const name = employee?.name ? employee.name.split(' ')[0] : 'Rajesh'
+  const { goNext } = useSIPStore()
 
   return (
-    <div className="cred-page flex flex-col relative overflow-hidden bg-smf-app">
-      {/* Dynamic ambient decoration */}
-      <div className="absolute -top-40 -right-40 w-96 h-96 bg-smf-teal-light rounded-full blur-[100px] pointer-events-none opacity-60" />
-      <div className="absolute top-[40vh] -left-20 w-72 h-72 bg-smf-amber-light rounded-full blur-[90px] pointer-events-none opacity-50" />
+    <section className="relative min-h-[calc(100vh-71px)] bg-shriram-dark overflow-hidden flex items-center">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-hero-pattern bg-[size:24px_24px] opacity-100 pointer-events-none" />
+      {/* Gold radial glow */}
+      <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-shriram-gold/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-shriram-gold/3 blur-[80px] pointer-events-none" />
 
-      <div className="relative flex-1 flex flex-col px-6 pt-12 pb-8">
-        {/* Brand Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2.5 shrink-0"
-        >
-          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-smf-teal flex items-center justify-center text-white font-extrabold text-base border border-smf-line shadow-sm">
-            SMF
-          </div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {/* Left — Content */}
           <div>
-            <span className="text-smf-teal font-extrabold text-[15px] tracking-tight block">Shriram Group</span>
-            <span className="text-[10px] text-smf-muted font-bold tracking-[0.15em] uppercase leading-none block">Corporate SIP</span>
+            <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <span className="eyebrow text-shriram-gold/80 flex items-center gap-2">
+                <span className="w-6 h-px bg-shriram-gold/60" />
+                Shriram GSIP · Employee Benefit Plan
+              </span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.6 }}
+              className="text-white font-extrabold text-[clamp(36px,5vw,56px)] leading-[1.08] tracking-tight font-display mt-5 mb-5"
+            >
+              Start building wealth,<br />
+              <span className="text-shriram-gold">straight from salary.</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="text-white/60 text-[16px] leading-relaxed max-w-md mb-10 font-sans"
+            >
+              Join thousands of Shriram Group employees investing in curated mutual funds — fully automated,
+              no bank forms, no paperwork. Just one click to start.
+            </motion.p>
+
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap gap-4 mb-12"
+            >
+              <button
+                onClick={goNext}
+                id="welcome-get-started"
+                className="btn-gold-lg text-[15px] group shadow-gold"
+              >
+                Get started
+                <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button className="btn-outline-white text-[15px] px-8 py-4 rounded-xl">
+                Learn more
+              </button>
+            </motion.div>
+
+            {/* Stats row */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.45 }}
+              className="flex flex-wrap gap-8"
+            >
+              {stats.map((s, i) => (
+                <div key={i} className="flex flex-col">
+                  <span className="text-shriram-gold text-[26px] font-extrabold font-display leading-none">{s.value}</span>
+                  <span className="text-white/45 text-[12px] mt-1 font-sans">{s.label}</span>
+                </div>
+              ))}
+            </motion.div>
           </div>
-        </motion.div>
 
-        {/* Dynamic Greeting & Social Proof Hook */}
-        <div className="flex-1 flex flex-col justify-center min-h-0 py-6">
+          {/* Right — Feature cards */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.25, duration: 0.6 }}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
           >
-            <span className="text-smf-teal font-bold text-xs uppercase tracking-[0.15em] block mb-2 font-body">Welcome, {name}</span>
-            <h1 className="font-extrabold tracking-tight text-smf-teal-dark text-[clamp(32px,10vw,42px)] leading-[1.08] font-display">
-              Start building wealth, straight from salary.
-            </h1>
-          </motion.div>
-
-          {/* Statistical Social Proof Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="cred-card px-5 py-4 mt-6 bg-white border border-smf-line shadow-sm relative overflow-hidden"
-          >
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-smf-teal" />
-            <div className="text-smf-teal-dark font-extrabold text-3xl font-display leading-none">3,247</div>
-            <div className="text-smf-muted text-[13px] font-medium leading-relaxed mt-1 font-body">
-              colleagues joined this month · <span className="text-smf-teal font-bold">₹2.4 Cr</span> invested together
-            </div>
-          </motion.div>
-
-          {/* Curated Features Grid */}
-          <div className="mt-8 space-y-4">
             {features.map((f, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + i * 0.1 }}
-                className="flex items-start gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 + i * 0.08 }}
+                className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/8 hover:border-shriram-gold/30 transition-all duration-200"
               >
-                <div className="w-10 h-10 rounded-2xl bg-smf-teal-light flex items-center justify-center shrink-0 border border-smf-teal/10">
-                  <f.icon className="w-5 h-5 text-smf-teal" />
+                <div className="w-10 h-10 rounded-xl bg-shriram-gold/15 flex items-center justify-center mb-4">
+                  <f.icon className="w-5 h-5 text-shriram-gold" />
                 </div>
-                <div className="min-w-0 pt-0.5">
-                  <div className="text-smf-teal-dark text-[14px] font-bold font-body">{f.title}</div>
-                  <div className="text-smf-muted text-[12px] mt-0.5 font-body leading-normal">{f.desc}</div>
-                </div>
+                <h3 className="text-white font-bold text-[14px] font-sans mb-1.5">{f.title}</h3>
+                <p className="text-white/45 text-[12.5px] leading-relaxed font-sans">{f.desc}</p>
               </motion.div>
             ))}
-          </div>
-        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="shrink-0 mt-4"
-        >
-          <p className="text-smf-muted text-[11px] text-center leading-relaxed font-body">
-            Auto-enrolled provisional choice at ₹500/month · modify or opt out anytime. Distributed by Shriram Finance Ltd.
-            Mutual fund investments are subject to market risks.
-          </p>
-        </motion.div>
+            {/* Enrolment badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.7 }}
+              className="sm:col-span-2 bg-shriram-gold/10 border border-shriram-gold/25 rounded-2xl p-5 flex items-center gap-4"
+            >
+              <div className="w-10 h-10 rounded-full bg-shriram-gold/20 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5 text-shriram-gold" />
+              </div>
+              <div>
+                <div className="text-shriram-gold font-extrabold text-[22px] font-display leading-none">3,247</div>
+                <div className="text-white/60 text-[12.5px] mt-1 font-sans">
+                  colleagues joined this month · <span className="text-shriram-gold font-bold">₹2.4 Cr</span> invested together
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }

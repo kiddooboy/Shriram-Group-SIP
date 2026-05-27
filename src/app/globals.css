@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
 
 * {
   box-sizing: border-box;
@@ -11,108 +11,146 @@
 }
 
 html {
-  background-color: #ECE7DC;
-  color: #15201B;
-  font-family: 'Hanken Grotesk', 'Inter', system-ui, sans-serif;
+  background-color: #F5F5F0;
+  color: #1C1C1C;
+  font-family: 'Inter', 'Hanken Grotesk', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background-image: radial-gradient(circle at 1px 1px, rgba(11,92,71,0.06) 1px, transparent 0);
-  background-size: 22px 22px;
+  scroll-behavior: smooth;
 }
 
 body {
   min-height: 100dvh;
-  overflow-x: hidden;   /* clip horizontal only — vertical scroll stays free */
-  background: #ECE7DC;
+  overflow-x: hidden;
+  background: #F5F5F0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(11,92,71,0.03) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
-::-webkit-scrollbar { width: 6px; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgba(11, 92, 71, 0.16);
-  border-radius: 999px;
-}
+::-webkit-scrollbar-thumb { background: rgba(28,28,28,0.12); border-radius: 999px; }
 
+/* Auto-fill fix */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #15201B;
-  -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+  -webkit-text-fill-color: #1C1C1C;
+  -webkit-box-shadow: 0 0 0px 1000px #fff inset;
   transition: background-color 5000s ease-in-out 0s;
 }
 
-select { -webkit-appearance: none; }
-
-/* ── Shriram Mutual Fund brand custom style system (backward-compatible) ── */
+/* ── Shriram AMC Design System ────────────────────────────────────────────── */
 @layer components {
-  .cred-page {
-    @apply bg-smf-app text-smf-ink w-full min-h-full;
-    font-family: 'Hanken Grotesk', sans-serif;
+
+  /* Buttons */
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2
+           bg-shriram-gold text-shriram-dark font-bold
+           px-7 py-3.5 rounded-lg
+           transition-all duration-150
+           hover:bg-shriram-gold-dark active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    font-family: 'Inter', sans-serif;
   }
-  /* hidden scrollbars */
-  .scroll-container::-webkit-scrollbar {
-    display: none;
+  .btn-gold-lg {
+    @apply btn-gold text-base px-10 py-4 rounded-xl;
   }
-  .scroll-container {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2
+           bg-transparent text-shriram-dark font-semibold
+           border-2 border-shriram-dark
+           px-7 py-3.5 rounded-lg
+           transition-all duration-150
+           hover:bg-shriram-dark hover:text-white active:scale-[0.98];
+    font-family: 'Inter', sans-serif;
   }
-  /* soft glow */
-  .cred-glow {
-    background: radial-gradient(60% 50% at 50% 0%, rgba(11,92,71,0.08) 0%, rgba(11,92,71,0) 100%);
+  .btn-outline-white {
+    @apply inline-flex items-center justify-center gap-2
+           bg-transparent text-white font-semibold
+           border-2 border-white/40
+           px-7 py-3.5 rounded-lg
+           transition-all duration-150
+           hover:border-white hover:bg-white/10 active:scale-[0.98];
   }
-  .cred-card {
-    @apply bg-white border border-smf-line rounded-3xl;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+  .btn-ghost {
+    @apply text-shriram-muted text-sm font-medium hover:text-shriram-dark transition-colors;
   }
-  .cred-card-active {
-    @apply bg-white border-2 border-smf-teal rounded-3xl;
-    box-shadow: 0 8px 24px rgba(7,61,47,0.06);
+
+  /* Form fields */
+  .field-label {
+    @apply block text-[11px] font-bold uppercase tracking-[0.12em] text-shriram-muted mb-1.5;
   }
-  .cred-card-active-amber {
-    @apply bg-smf-amber-light border-2 border-smf-amber rounded-3xl;
+  .field-input {
+    @apply w-full bg-white border border-shriram-line rounded-xl
+           px-4 py-3.5 text-[15px] font-medium text-shriram-dark
+           placeholder-shriram-muted/40
+           focus:outline-none focus:border-shriram-gold focus:ring-2 focus:ring-shriram-gold/15
+           transition-all duration-150;
+    font-family: 'Inter', sans-serif;
   }
-  .cred-row {
-    @apply bg-white border border-smf-line rounded-2xl;
+  .field-input-error {
+    @apply field-input border-red-400 focus:border-red-400 focus:ring-red-100;
   }
-  /* primary CTA — Teal pill button */
-  .cred-btn {
-    @apply w-full bg-smf-teal text-white font-bold py-[18px] rounded-2xl
-           flex items-center justify-center gap-2
-           transition-transform duration-150 active:scale-[0.98]
-           hover:bg-smf-teal-dark
-           disabled:bg-smf-line disabled:text-smf-muted disabled:cursor-not-allowed disabled:active:scale-100;
-    font-family: 'Hanken Grotesk', sans-serif;
+
+  /* Step card */
+  .step-card {
+    @apply bg-white rounded-2xl border border-shriram-line shadow-card
+           px-8 py-8 w-full max-w-xl mx-auto;
   }
-  .cred-btn-accent {
-    @apply w-full bg-smf-amber text-white font-bold py-[18px] rounded-2xl
-           flex items-center justify-center gap-2
-           transition-transform duration-150 active:scale-[0.98]
-           hover:filter hover:brightness-[0.93]
-           disabled:bg-smf-line disabled:text-smf-muted disabled:cursor-not-allowed disabled:active:scale-100;
-    font-family: 'Hanken Grotesk', sans-serif;
+
+  /* Fund card */
+  .fund-card {
+    @apply bg-white rounded-2xl border border-shriram-line shadow-card
+           p-6 cursor-pointer transition-all duration-200
+           hover:-translate-y-1 hover:shadow-card-lg;
   }
-  .cred-btn-ghost {
-    @apply w-full text-smf-muted text-sm font-semibold py-3 hover:text-smf-teal;
+  .fund-card-active {
+    @apply fund-card border-2 border-shriram-gold shadow-gold;
   }
-  .cred-chip {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-           text-xs font-semibold tracking-wide;
+
+  /* Section label */
+  .eyebrow {
+    @apply text-shriram-gold text-[11px] font-extrabold uppercase tracking-[0.2em] font-sans;
   }
-  .cred-label {
-    @apply text-smf-muted text-[11px] font-bold uppercase tracking-[0.14em];
+  .eyebrow-dark {
+    @apply text-shriram-muted text-[11px] font-extrabold uppercase tracking-[0.2em] font-sans;
   }
-  .cred-h1 {
-    @apply text-[24px] leading-[1.18] font-bold tracking-tight text-smf-teal-dark;
-    font-family: 'Bricolage Grotesque', sans-serif;
+
+  /* Progress step pip */
+  .step-pip {
+    @apply w-2 h-2 rounded-full bg-shriram-line;
   }
+  .step-pip-active {
+    @apply step-pip bg-shriram-gold;
+  }
+  .step-pip-done {
+    @apply step-pip bg-smf-teal;
+  }
+
+  /* Legacy mobile styles (backward compat) */
+  .cred-page    { @apply bg-shriram-off-white text-shriram-dark w-full min-h-full; }
+  .cred-card    { @apply bg-white border border-shriram-line rounded-2xl; }
+  .cred-label   { @apply text-shriram-muted text-[11px] font-bold uppercase tracking-[0.14em]; }
+  .cred-h1      { @apply text-[24px] leading-[1.18] font-bold tracking-tight text-shriram-dark; font-family: 'Bricolage Grotesque', sans-serif; }
+  .cred-btn     { @apply btn-gold w-full py-[18px] rounded-2xl flex items-center justify-center gap-2; }
+  .cred-btn-accent { @apply btn-gold w-full py-[18px] rounded-2xl flex items-center justify-center gap-2; }
+  .cred-btn-ghost  { @apply w-full text-shriram-muted text-sm font-semibold py-3 hover:text-shriram-dark; }
+  .cred-row     { @apply bg-white border border-shriram-line rounded-2xl; }
+  .cred-chip    { @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide; }
 }
 
+/* Scroll container */
+.scroll-container::-webkit-scrollbar { display: none; }
+.scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Shimmer */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
+  0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 .shimmer {
-  background: linear-gradient(90deg, rgba(11,92,71,0.02) 25%, rgba(11,92,71,0.08) 50%, rgba(11,92,71,0.02) 75%);
+  background: linear-gradient(90deg, rgba(245,165,0,0.03) 25%, rgba(245,165,0,0.10) 50%, rgba(245,165,0,0.03) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.8s infinite;
 }

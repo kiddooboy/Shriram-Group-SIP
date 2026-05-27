@@ -1,42 +1,31 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSIPStore } from '@/store/useSIPStore'
+import SiteHeader from '@/components/layout/SiteHeader'
+import SiteFooter from '@/components/layout/SiteFooter'
 
-import WelcomeStep from '@/components/steps/WelcomeStep'
-import LoginStep from '@/components/steps/LoginStep'
-import FundsSelectStep from '@/components/steps/FundsSelectStep'
+import WelcomeStep       from '@/components/steps/WelcomeStep'
+import LoginStep         from '@/components/steps/LoginStep'
+import FundsSelectStep   from '@/components/steps/FundsSelectStep'
 import IntentCapturedStep from '@/components/steps/IntentCapturedStep'
-import GoalSelectStep from '@/components/steps/GoalSelectStep'
-import TunedPlanStep from '@/components/steps/TunedPlanStep'
-import QuickKYCStep from '@/components/steps/QuickKYCStep'
-import ActivationStep from '@/components/steps/ActivationStep'
-import SuccessStep from '@/components/steps/SuccessStep'
-import DashboardStep from '@/components/steps/DashboardStep'
+import LinkSentStep      from '@/components/steps/LinkSentStep'
 
-const STEP_LIST = [
-  'welcome',
-  'funds-select',
-  'intent-captured',
-  'goal-select',
-  'tuned-plan',
-  'kyc',
-  'activation',
-  'success',
+// Progress breadcrumb mapping
+const BREADCRUMB = [
+  { key: 'welcome',         label: 'Welcome',      phase: null },
+  { key: 'login',           label: 'Sign in',      phase: '1' },
+  { key: 'funds-select',    label: 'Choose fund',  phase: '1' },
+  { key: 'intent-captured', label: 'Intent',       phase: '1' },
+  { key: 'link-sent',       label: 'KYC link',     phase: '1' },
 ]
 
 export default function Home() {
-  const { currentStep, selectedGoal, consentChecked, goNext, setStep } = useSIPStore()
+  const { currentStep } = useSIPStore()
 
-  const isDashboard = currentStep === 'dashboard'
-  const isLogin = currentStep === 'login'
-
-  // Determine current step index and progress metrics
-  const stepIndex = STEP_LIST.indexOf(currentStep)
-  const stepNumber = stepIndex !== -1 ? stepIndex + 1 : 1
-  const isPhase2 = stepNumber >= 4
-  const progressPct = (stepNumber / 8) * 100
-  const stepTxt = stepNumber <= 3 ? 'Phase 1' : stepNumber === 8 ? 'Done' : 'Phase 2'
+  const isWelcome = currentStep === 'welcome'
+  const stepIndex = BREADCRUMB.findIndex(b => b.key === currentStep)
+  const progressPct = Math.round(((stepIndex + 1) / BREADCRUMB.length) * 100)
 
   function renderStep() {
     switch (currentStep) {
@@ -44,194 +33,79 @@ export default function Home() {
       case 'login':           return <LoginStep />
       case 'funds-select':    return <FundsSelectStep />
       case 'intent-captured': return <IntentCapturedStep />
-      case 'goal-select':     return <GoalSelectStep />
-      case 'tuned-plan':      return <TunedPlanStep />
-      case 'kyc':             return <QuickKYCStep />
-      case 'activation':      return <ActivationStep />
-      case 'success':         return <SuccessStep />
-      case 'dashboard':       return <DashboardStep />
+      case 'link-sent':       return <LinkSentStep />
       default:                return <WelcomeStep />
     }
   }
 
-  // Determine if global footbar should render
-  const showFootbar = ['welcome', 'intent-captured', 'goal-select', 'tuned-plan', 'activation'].includes(currentStep)
-
-  function renderFootbar() {
-    switch (currentStep) {
-      case 'welcome':
-        return (
-          <button
-            onClick={goNext}
-            className="cred-btn shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
-          >
-            See my fund options
-          </button>
-        )
-      case 'intent-captured':
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <button
-              onClick={goNext}
-              className="cred-btn-accent shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
-            >
-              Continue setup (2 min)
-            </button>
-            <button
-              onClick={() => setStep('dashboard')}
-              className="cred-btn-ghost text-center text-xs font-bold text-smf-muted hover:text-smf-teal"
-            >
-              Finish setup later
-            </button>
-          </div>
-        )
-      case 'goal-select':
-        return (
-          <button
-            onClick={goNext}
-            disabled={!selectedGoal}
-            className="cred-btn-accent shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
-          >
-            Continue
-          </button>
-        )
-      case 'tuned-plan':
-        return (
-          <button
-            onClick={goNext}
-            className="cred-btn-accent shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
-          >
-            Looks good — continue
-          </button>
-        )
-      case 'activation':
-        return (
-          <button
-            onClick={goNext}
-            disabled={!consentChecked}
-            className="cred-btn-accent shadow-sm hover:translate-y-[-1px] active:scale-[0.99] transition-all"
-          >
-            Authorise &amp; start
-          </button>
-        )
-      default:
-        return null
-    }
-  }
-
-  // Pure rendering for the dashboard — full view
-  if (isDashboard) {
-    return (
-      <div className="bg-smf-app min-h-screen text-smf-ink relative">
-        <motion.div
-          key={currentStep}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.25 }}
-        >
-          {renderStep()}
-        </motion.div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start bg-smf-bg-cream px-4 py-8 font-body">
-      
-      {/* Brand & Introduction Header */}
-      <div className="text-center mb-5 max-w-[420px] font-body">
-        <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-smf-teal font-display block">
-          Shriram GSIP
-        </span>
-        <h1 className="text-[25px] font-extrabold tracking-tight text-smf-teal-dark mt-1 mb-1.5 font-display">
-          The Two-Phase One-Click Journey
-        </h1>
-        <p className="text-smf-muted text-[13px] leading-normal font-medium">
-          Tap through it as an employee would. Phase 1 captures intent in one click; Phase 2 completes the rest as guided micro-steps.
-        </p>
-      </div>
+    <div className="min-h-screen flex flex-col bg-shriram-cream">
+      <SiteHeader />
 
-      {/* Phase Navigation Tabs */}
-      {!isLogin && (
-        <div className="flex gap-2.5 mb-4">
-          <div
-            className={`text-xs font-bold px-4 py-1.5 rounded-full border transition-colors ${
-              !isPhase2
-                ? 'bg-smf-teal text-white border-smf-teal shadow-sm'
-                : 'bg-white text-smf-muted border-smf-line'
-            }`}
-          >
-            Phase 1 · Intent
-          </div>
-          <div
-            className={`text-xs font-bold px-4 py-1.5 rounded-full border transition-colors ${
-              isPhase2 && stepNumber !== 8
-                ? 'bg-smf-amber text-white border-smf-amber shadow-sm'
-                : 'bg-white text-smf-muted border-smf-line'
-            }`}
-          >
-            Phase 2 · Completion
+      {/* ── Journey progress bar (hidden on welcome) ───────────────────── */}
+      {!isWelcome && (
+        <div className="bg-white border-b border-shriram-line sticky top-[71px] z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-6">
+            {/* Breadcrumb pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              {BREADCRUMB.filter(b => b.phase !== null).map((b, i) => {
+                const idx = BREADCRUMB.findIndex(x => x.key === currentStep)
+                const myIdx = BREADCRUMB.findIndex(x => x.key === b.key)
+                const done   = myIdx < idx
+                const active = b.key === currentStep
+                return (
+                  <div key={b.key} className="flex items-center gap-2 shrink-0">
+                    <div className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1 rounded-full transition-colors ${
+                      active ? 'bg-shriram-gold text-shriram-dark' :
+                      done   ? 'bg-shriram-gold/15 text-shriram-gold border border-shriram-gold/30' :
+                               'bg-shriram-line/60 text-shriram-muted/60'
+                    }`}>
+                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                        active ? 'bg-shriram-dark/20' : done ? 'bg-shriram-gold/30' : 'bg-transparent'
+                      }`}>
+                        {done ? '✓' : i + 1}
+                      </span>
+                      {b.label}
+                    </div>
+                    {i < BREADCRUMB.filter(x => x.phase !== null).length - 1 && (
+                      <div className={`w-5 h-px ${done ? 'bg-shriram-gold' : 'bg-shriram-line'} shrink-0`} />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Phase indicator */}
+            <div className="shrink-0 hidden sm:flex items-center gap-2 text-[12px] text-shriram-muted font-semibold">
+              <div className="h-1.5 w-32 bg-shriram-line rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-shriram-gold rounded-full"
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                />
+              </div>
+              <span className="text-shriram-gold font-bold">{progressPct}%</span>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Phone Simulator Wrapper */}
-      <div className="w-full max-w-[390px] bg-white rounded-[34px] p-2 border border-black/5 shadow-[0_24px_60px_-20px_rgba(7,61,47,0.25),0_4px_14px_rgba(0,0,0,0.05)] relative">
-        <div className="bg-smf-app rounded-[26px] h-[720px] overflow-hidden flex flex-col relative justify-between">
-          
-          {/* Statusbar & Internal Progress Indicator */}
-          {!isLogin && (
-            <div className="shrink-0 bg-smf-app pt-4 pb-2 z-30 font-body">
-              <div className="flex justify-between items-center px-5 text-[11px] font-bold text-smf-muted">
-                <span className="flex items-center gap-1.5 text-smf-teal-dark">
-                  <span className="w-1.5 h-1.5 rounded-full bg-smf-teal-mid" />
-                  Shriram GSIP
-                </span>
-                <span>{stepTxt}</span>
-              </div>
-              
-              {/* Horizontal Progress Bar */}
-              <div className="h-[3.5px] bg-smf-line mx-5 mt-2 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  animate={{
-                    width: `${progressPct}%`,
-                    backgroundColor: isPhase2 ? '#B5731B' : '#0B5C47',
-                  }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
-                />
-              </div>
-            </div>
-          )}
+      {/* ── Main content ────────────────────────────────────────────────── */}
+      <main className="flex-1">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+          >
+            {renderStep()}
+          </motion.div>
+        </AnimatePresence>
+      </main>
 
-          {/* Active step screen viewport (Scrollable Area) */}
-          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto scroll-container">
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-              className="flex-1 flex flex-col min-h-full"
-            >
-              {renderStep()}
-            </motion.div>
-          </div>
-
-          {/* Global Footbar */}
-          {showFootbar && (
-            <div className="shrink-0 p-5 bg-white/95 backdrop-blur-md border-t border-smf-line shadow-sm flex flex-col gap-2 z-30">
-              {renderFootbar()}
-            </div>
-          )}
-          
-        </div>
-      </div>
-
-      {/* Legal & Compliance footer disclaimer */}
-      <div className="max-w-[420px] text-center text-[11px] text-smf-muted mt-5 leading-normal font-medium font-body px-1">
-        Prototype for internal review. Names, figures, and the salary-deduction step are illustrative and subject to Legal &amp; Compliance sign-off. Projections assume an indicative 11% annualized return over 30 years and are not guaranteed.
-      </div>
-      
+      <SiteFooter />
     </div>
   )
 }
