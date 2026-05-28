@@ -22,7 +22,8 @@ export async function POST(req: NextRequest) {
     if (apiKey) {
       try {
         // Quick SMS route (route=q) — no DLT / no website verification required.
-        const message = `Your Shriram SIP verification code is ${otp}. Valid for 10 minutes. Do not share this code with anyone.`
+        // Keep message under 160 chars to bill as a single SMS segment.
+        const message = `Shriram Group SIP: ${otp} is your OTP for employee SIP enrolment. Valid for 10 minutes. Do not share. - Shriram Asset Management`
         const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${apiKey}&route=q&message=${encodeURIComponent(message)}&flash=0&numbers=${mobile}`
         const res  = await fetch(url, { method: 'GET' })
         const data = await res.json()
