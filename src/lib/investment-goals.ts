@@ -50,7 +50,7 @@ export const INVESTMENT_GOALS: InvestmentGoal[] = [
     defaultHorizonYrs: 10,
     defaultTargetINR: 2_500_000,
     risk: 'High',
-    preferredCategories: ['FLEXI_CAP', 'LARGE_CAP', 'AGGRESSIVE_HYBRID', 'MULTI_ASSET'],
+    preferredCategories: ['FLEXI_CAP', 'MULTI_ASSET'],
     fallbackAnnualReturn: 13,
   },
   {
@@ -61,7 +61,7 @@ export const INVESTMENT_GOALS: InvestmentGoal[] = [
     defaultHorizonYrs: 20,
     defaultTargetINR: 20_000_000,
     risk: 'High',
-    preferredCategories: ['FLEXI_CAP', 'LARGE_CAP', 'AGGRESSIVE_HYBRID', 'MULTI_ASSET'],
+    preferredCategories: ['FLEXI_CAP', 'MULTI_ASSET'],
     fallbackAnnualReturn: 12,
   },
   {
@@ -72,7 +72,7 @@ export const INVESTMENT_GOALS: InvestmentGoal[] = [
     defaultHorizonYrs: 12,
     defaultTargetINR: 4_000_000,
     risk: 'High',
-    preferredCategories: ['FLEXI_CAP', 'AGGRESSIVE_HYBRID', 'MULTI_ASSET', 'LARGE_CAP'],
+    preferredCategories: ['FLEXI_CAP', 'MULTI_ASSET'],
     fallbackAnnualReturn: 12.5,
   },
   {
@@ -83,7 +83,7 @@ export const INVESTMENT_GOALS: InvestmentGoal[] = [
     defaultHorizonYrs: 15,
     defaultTargetINR: 3_000_000,
     risk: 'Moderate',
-    preferredCategories: ['MULTI_ASSET', 'AGGRESSIVE_HYBRID', 'FLEXI_CAP', 'LARGE_CAP'],
+    preferredCategories: ['MULTI_ASSET', 'FLEXI_CAP'],
     fallbackAnnualReturn: 11.5,
   },
   {
@@ -94,7 +94,7 @@ export const INVESTMENT_GOALS: InvestmentGoal[] = [
     defaultHorizonYrs: 7,
     defaultTargetINR: 5_000_000,
     risk: 'High',
-    preferredCategories: ['FLEXI_CAP', 'AGGRESSIVE_HYBRID', 'LARGE_CAP', 'MULTI_ASSET'],
+    preferredCategories: ['FLEXI_CAP', 'MULTI_ASSET'],
     fallbackAnnualReturn: 12,
   },
   {
@@ -105,18 +105,18 @@ export const INVESTMENT_GOALS: InvestmentGoal[] = [
     defaultHorizonYrs: 4,
     defaultTargetINR: 1_500_000,
     risk: 'Moderate',
-    preferredCategories: ['MULTI_ASSET', 'AGGRESSIVE_HYBRID', 'SHORT_DURATION', 'REGULAR_SAVINGS'],
+    preferredCategories: ['MULTI_ASSET', 'FLEXI_CAP'],
     fallbackAnnualReturn: 10,
   },
   {
     id: 'EMERGENCY_FUND',
     label: 'Emergency Fund',
     icon: ShieldAlert,
-    description: '6 months of expenses parked in liquid, instant-access funds.',
+    description: '6 months of expenses parked in stable, multi-asset allocation funds.',
     defaultHorizonYrs: 2,
     defaultTargetINR: 300_000,
     risk: 'Low',
-    preferredCategories: ['LIQUID', 'OVERNIGHT', 'REGULAR_SAVINGS', 'SHORT_DURATION'],
+    preferredCategories: ['MULTI_ASSET'],
     fallbackAnnualReturn: 7,
   },
   {
@@ -138,7 +138,7 @@ export const INVESTMENT_GOALS: InvestmentGoal[] = [
     defaultHorizonYrs: 2,
     defaultTargetINR: 400_000,
     risk: 'Low',
-    preferredCategories: ['LIQUID', 'SHORT_DURATION', 'REGULAR_SAVINGS'],
+    preferredCategories: ['MULTI_ASSET'],
     fallbackAnnualReturn: 7.5,
   },
   {
@@ -149,7 +149,7 @@ export const INVESTMENT_GOALS: InvestmentGoal[] = [
     defaultHorizonYrs: 15,
     defaultTargetINR: 7_500_000,
     risk: 'Moderate',
-    preferredCategories: ['MULTI_ASSET', 'REGULAR_SAVINGS', 'AGGRESSIVE_HYBRID', 'SHORT_DURATION'],
+    preferredCategories: ['MULTI_ASSET', 'FLEXI_CAP'],
     fallbackAnnualReturn: 10.5,
   },
 ]

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight, ArrowLeft, Check, AlertCircle, Loader2, ShieldCheck,
-  Upload, FileCheck2, X, CheckCircle2, MessageSquare,
+  Upload, FileCheck2, X, CheckCircle2, MessageSquare, Video
 } from 'lucide-react'
 import { EMPTY_KYC, DEMO_KYC, KycData, SECTIONS, SectionKey, UploadedFileMeta } from './types'
 import { validateSection, FieldErrors } from './validators'
@@ -329,6 +329,7 @@ function SectionHeader({ sectionKey, idx, total }: { sectionKey: SectionKey; idx
     nominee:    'Your nominee will receive the SIP value in the unfortunate event of your demise.',
     fatca:      'Mandatory tax-residency declarations under FATCA / CRS regulations.',
     uploads:    'Clear photos of the original documents. JPG, PNG or PDF up to 5 MB each.',
+    videoKyc:   'Live webcam liveness check required by SEBI to verify your identity and prevent fraud.',
     consents:   'Please read and acknowledge the following declarations to proceed.',
     review:     'Review everything before final submission. You can go back to edit any section.',
   }
@@ -367,6 +368,7 @@ function SectionBody(props: BodyProps) {
     case 'nominee':    return <NomineeSection {...props} />
     case 'fatca':      return <FatcaSection {...props} />
     case 'uploads':    return <UploadsSection {...props} />
+    case 'videoKyc':   return <VideoKycSection {...props} />
     case 'consents':   return <ConsentsSection {...props} />
     case 'review':     return <ReviewSection {...props} />
   }
@@ -764,6 +766,348 @@ function UploadCard({ label, caption, value, onPick, onClear, error }: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Video KYC Step (Simulated & Interactive)
+// ─────────────────────────────────────────────────────────────────────────────
+function VideoKycSection({ data, errors, setNested, setData }: BodyProps) {
+  const [stream, setStream] = useState<MediaStream | null>(null)
+  const [permissionState, setPermissionState] = useState<'prompt' | 'granted' | 'denied'>('prompt')
+  const [step, setStep] = useState<'init' | 'recording' | 'verifying' | 'success'>('init')
+  const [countdown, setCountdown] = useState(4)
+  const [loaderMsg, setLoaderMsg] = useState('Analysing face coordinates...')
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+
+  // Start webcam feed if permitted
+  async function startCamera() {
+    try {
+      setPermissionState('prompt')
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 480, height: 360, facingMode: 'user' },
+        audio: false
+      })
+      setStream(mediaStream)
+      streamRef.current = mediaStream
+      setPermissionState('granted')
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
+        videoRef.current.play().catch(() => {})
+      }
+    } catch (err) {
+      console.warn('Camera access denied or unavailable:', err)
+      setPermissionState('denied')
+    }
+  }
+
+  // Stop camera feed
+  function stopCamera() {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    setStream(null)
+  }
+
+  useEffect(() => {
+    // Attempt to start camera immediately on mount
+    startCamera()
+    return () => {
+      stopCamera()
+    }
+  }, [])
+
+  // Start simulated recording countdown
+  function handleStartVerification() {
+    setStep('recording')
+    setCountdown(4)
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          // Move to verifying stage
+          handleVerifyStage()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  // Simulated AI Verification steps
+  function handleVerifyStage() {
+    setStep('verifying')
+    
+    // Step 1: Liveness detection
+    setLoaderMsg('Running real-time liveness detection...')
+    
+    // Step 2: Match facial vectors with PAN card uploads
+    setTimeout(() => {
+      setLoaderMsg('Matching face coordinates with uploaded PAN Card...')
+    }, 1200)
+
+    // Step 3: Run anti-spoofing
+    setTimeout(() => {
+      setLoaderMsg('Running anti-spoofing and deepfake filters...')
+    }, 2400)
+
+    // Step 4: Confirm verification success
+    setTimeout(() => {
+      setLoaderMsg('Biometric verification verified successfully!')
+    }, 3600)
+
+    // Complete verification
+    setTimeout(() => {
+      setStep('success')
+      setData(d => ({
+        ...d,
+        videoKyc: {
+          verified: true,
+          completedAt: new Date().toLocaleString('en-IN'),
+          verificationCode: '8492'
+        }
+      }))
+      stopCamera()
+    }, 4500)
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-shriram-cream/40 border border-shriram-line/60 rounded-2xl p-5 flex flex-col md:flex-row items-center gap-6">
+        
+        {/* Left column: Sleek Viewfinder */}
+        <div className="relative w-64 h-64 rounded-3xl overflow-hidden bg-shriram-charcoal border-4 border-white shadow-card-lg flex items-center justify-center shrink-0">
+          
+          {permissionState === 'granted' && stream ? (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover scale-x-[-1]"
+            />
+          ) : (
+            /* Premium Animated Mock Scan Viewfinder */
+            <div className="absolute inset-0 bg-gradient-to-b from-shriram-charcoal to-shriram-dark flex flex-col items-center justify-center p-4">
+              <div className="w-20 h-20 rounded-full border-4 border-dashed border-shriram-gold/40 flex items-center justify-center mb-3 animate-[spin_10s_linear_infinity]">
+                <div className="w-12 h-12 rounded-full bg-shriram-gold/10 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-shriram-gold/20" />
+                </div>
+              </div>
+              <span className="text-[12px] text-white/50 font-semibold text-center">Camera Access Pending</span>
+              {permissionState === 'denied' && (
+                <button
+                  onClick={startCamera}
+                  className="mt-3 px-3 py-1.5 rounded-lg bg-shriram-gold/20 border border-shriram-gold/40 text-[11px] text-shriram-gold font-bold hover:bg-shriram-gold/30 transition-colors"
+                >
+                  Retry Permission
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Biometric overlay guide (oval scan area) */}
+          {step !== 'success' && (
+            <div className="absolute inset-0 border-2 border-dashed border-shriram-gold/20 rounded-3xl pointer-events-none flex items-center justify-center">
+              <div className={`w-[170px] h-[210px] rounded-[50%] border-2 transition-all duration-300 ${
+                step === 'recording' ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-pulse' :
+                step === 'verifying' ? 'border-shriram-gold shadow-[0_0_15px_rgba(207,164,73,0.4)] animate-pulse' :
+                'border-shriram-gold/50'
+              }`}>
+                {/* Crosshairs */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-6 h-px bg-white/20" />
+                  <div className="h-6 w-px bg-white/20" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Pulsating Recording indicator */}
+          {step === 'recording' && (
+            <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600/90 text-[10.5px] font-bold text-white shadow backdrop-blur">
+              <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
+              <span>REC</span>
+            </div>
+          )}
+
+          {/* Success tick overlay */}
+          {step === 'success' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="absolute inset-0 bg-emerald-600/95 flex flex-col items-center justify-center p-4 text-center z-20 text-white"
+            >
+              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-3 shadow">
+                <Check className="w-9 h-9 text-emerald-600" strokeWidth={3} />
+              </div>
+              <span className="font-extrabold text-[15px] block">Liveness Verified</span>
+              <span className="text-[11px] text-white/80 block mt-0.5">Biometrics Aligned (98.6%)</span>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Right column: Instructions / Verification panel */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="bg-shriram-gold/10 border border-shriram-gold/30 text-shriram-gold text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded">
+              Liveness Check
+            </span>
+            <span className="text-shriram-muted text-[11px] font-semibold">
+              SEBI Compliant Step
+            </span>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {step === 'init' && (
+              <motion.div
+                key="init"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-4"
+              >
+                <h3 className="text-shriram-dark font-extrabold text-[16px] leading-tight">
+                  Verify your identity in real-time
+                </h3>
+                <p className="text-shriram-muted text-[12.5px] leading-relaxed">
+                  To complete your onboarding, click below to start a secure video scan. You will be asked to hold steady and read aloud the confirmation code.
+                </p>
+
+                <div className="bg-shriram-cream border border-shriram-line p-3 rounded-xl">
+                  <div className="text-[10px] font-extrabold uppercase tracking-wider text-shriram-gold mb-1">
+                    Your Verification Code
+                  </div>
+                  <div className="text-[26px] font-extrabold tracking-[0.2em] font-mono text-shriram-dark">
+                    8492
+                  </div>
+                  <span className="text-[11.5px] text-shriram-muted">
+                    Read this code clearly aloud while holding your face in the oval frame.
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleStartVerification}
+                  className="btn-gold px-6 py-3 rounded-xl text-[13.5px] font-bold flex items-center gap-2 w-full sm:w-auto shadow-md"
+                >
+                  Start Video KYC <Video className="w-4.5 h-4.5" />
+                </button>
+              </motion.div>
+            )}
+
+            {step === 'recording' && (
+              <motion.div
+                key="recording"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4"
+              >
+                <h3 className="text-red-600 font-extrabold text-[16.5px] leading-tight flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-red-600 animate-ping shrink-0" />
+                  Recording verification stream...
+                </h3>
+                
+                <div className="p-4 bg-red-50 border border-red-100 rounded-xl">
+                  <span className="text-[12.5px] text-red-900 block font-semibold leading-relaxed">
+                    Say code: <span className="text-[22px] font-extrabold font-mono text-red-700 tracking-wider">8492</span>
+                  </span>
+                  <span className="text-[11.5px] text-red-700 block mt-1">
+                    Hold steady in good lighting. Time remaining: <span className="font-bold text-[14px]">{countdown}s</span>
+                  </span>
+                </div>
+
+                <div className="flex gap-2 items-center text-[12px] text-shriram-muted">
+                  <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                  <span>Capturing frame data & reading verification code...</span>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'verifying' && (
+              <motion.div
+                key="verifying"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4"
+              >
+                <h3 className="text-shriram-dark font-extrabold text-[16.5px] leading-tight">
+                  Running AI Biometric Match
+                </h3>
+                
+                <div className="p-4 bg-shriram-gold/5 border border-shriram-gold/20 rounded-xl flex items-center gap-3">
+                  <Loader2 className="w-6 h-6 animate-spin text-shriram-gold shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-[12.5px] text-shriram-dark font-semibold block leading-tight truncate">
+                      {loaderMsg}
+                    </span>
+                    <span className="text-[11.5px] text-shriram-muted block mt-0.5">
+                      Verifying stream against PAN card records...
+                    </span>
+                  </div>
+                </div>
+
+                <div className="w-full bg-shriram-line h-1.5 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-shriram-gold"
+                    initial={{ width: "10%" }}
+                    animate={{ width: "95%" }}
+                    transition={{ duration: 4.5, ease: "easeInOut" }}
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'success' && (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-4"
+              >
+                <div className="flex items-center gap-2 text-emerald-600">
+                  <CheckCircle2 className="w-6 h-6" />
+                  <h3 className="font-extrabold text-[17px]">
+                    Video KYC Verified!
+                  </h3>
+                </div>
+                <p className="text-shriram-muted text-[12.5px] leading-relaxed">
+                  Liveness confirmation and biometric checking completed successfully. Shriram Group compliance has pre-verified your facial records.
+                </p>
+
+                <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[12px] text-emerald-800 leading-normal">
+                  <div className="flex justify-between items-center py-0.5 font-bold">
+                    <span>Liveness match score</span>
+                    <span>98.6% (Passed)</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 text-emerald-700 mt-1">
+                    <span>Verified code matched</span>
+                    <span>"8492" ✓</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 text-emerald-700">
+                    <span>Biometric reference</span>
+                    <span className="font-mono">V-KYC-942851</span>
+                  </div>
+                </div>
+
+                <span className="text-[11px] text-shriram-gold font-bold block animate-pulse">
+                  ✓ Click 'Save & continue' below to advance to consents.
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+      {errors.videoKyc && (
+        <div className="text-red-600 text-[11.5px] mt-1 flex items-center gap-1">
+          <AlertCircle className="w-3.5 h-3.5" /> {errors.videoKyc}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Consents
 // ─────────────────────────────────────────────────────────────────────────────
 function ConsentsSection({ data, errors, setNested }: BodyProps) {
@@ -845,6 +1189,11 @@ function ReviewSection({ data }: BodyProps) {
       ['PAN card',  data.uploads.panCard?.name   ?? '—'],
       ['Aadhaar',   data.uploads.aadhaar?.name   ?? '—'],
       ['Signature', data.uploads.signature?.name ?? '—'],
+    ]},
+    { title: 'Video KYC', entries: [
+      ['Status',         data.videoKyc.verified ? 'Verified successfully ✓' : 'Pending — Action required'],
+      ['Completed at',   data.videoKyc.completedAt || '—'],
+      ['Verified code',  data.videoKyc.verificationCode || '—'],
     ]},
   ]
   return (

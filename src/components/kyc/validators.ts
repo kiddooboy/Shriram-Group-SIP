@@ -84,6 +84,12 @@ export function validateSection(section: SectionKey, data: KycData): FieldErrors
       if (!data.uploads.signature) e.signature = 'Signature/photo is required'
       break
     }
+    case 'videoKyc': {
+      if (!data.videoKyc || !data.videoKyc.verified) {
+        e.videoKyc = 'Please complete the Video KYC liveness check to proceed'
+      }
+      break
+    }
     case 'consents': {
       if (!data.consents.dataPrivacy)         e.dataPrivacy        = 'Required'
       if (!data.consents.riskAcknowledged)    e.riskAcknowledged   = 'Required'
@@ -93,10 +99,10 @@ export function validateSection(section: SectionKey, data: KycData): FieldErrors
     }
     case 'review':
       // Re-run every section so the user is warned about anything stale.
-      const order: SectionKey[] = ['personal','pan','aadhaar','address','occupation','bank','nominee','fatca','uploads','consents']
+      const order: SectionKey[] = ['pan', 'aadhaar', 'personal', 'address', 'occupation', 'bank', 'nominee', 'fatca', 'uploads', 'videoKyc', 'consents']
       for (const s of order) {
         if (Object.keys(validateSection(s, data)).length > 0) {
-          e._summary = `Please complete the ${s} section.`
+          e._summary = `Please complete the ${s.replace(/([A-Z])/g, ' $1').toLowerCase()} section.`
           break
         }
       }

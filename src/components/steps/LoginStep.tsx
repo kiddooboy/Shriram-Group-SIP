@@ -21,6 +21,12 @@ export default function LoginStep() {
   const [devOtp, setDevOtp]      = useState<string | null>(null)
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  useState(() => {
+    if (typeof window !== 'undefined' && !sessionStorage.getItem('gsip_start_time')) {
+      sessionStorage.setItem('gsip_start_time', Date.now().toString())
+    }
+  })
+
   // ── Send OTP via our own API ──────────────────────────────────────────────
   async function handleSendOTP() {
     if (!empId.trim())             { setError('Please enter your Employee ID'); return }

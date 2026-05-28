@@ -21,21 +21,6 @@ export default function GoalSelectStep() {
   )
   const [fundId, setFundId] = useState<string | null>(selectedFundId)
 
-  // Ranked funds for the current goal — preferred categories first, then by 5-yr return.
-  const rankedFunds = useMemo(() => {
-    if (!goalId) return []
-    const order = rankFundsForGoal(goalId, SHRIRAM_FUNDS)
-    return order.map(id => SHRIRAM_FUNDS.find(f => f.id === id)!).slice(0, 4)
-  }, [goalId])
-
-  // Auto-select top-ranked fund when goal changes (only if no fund chosen yet for this goal).
-  useEffect(() => {
-    if (!goalId)            { setFundId(null); return }
-    if (rankedFunds.length === 0) return
-    const stillRanked = fundId && rankedFunds.some(f => f.id === fundId)
-    if (!stillRanked) setFundId(rankedFunds[0].id)
-  }, [goalId]) // eslint-disable-line react-hooks/exhaustive-deps
-
   function handleSelectGoal(id: InvestmentGoalId) {
     setGoalId(id)
     setInvestmentGoalId(id)
@@ -61,12 +46,12 @@ export default function GoalSelectStep() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8 sm:mb-10">
-          <span className="eyebrow">Step 1 · Goal & Fund</span>
+          <span className="eyebrow">Step 1 · Goal & Fund Selection</span>
           <h2 className="text-[clamp(26px,4vw,38px)] font-extrabold text-shriram-dark font-display tracking-tight mt-2 mb-2">
-            Pick a goal. We'll match a fund.
+            Choose your goal. Select your preferred fund.
           </h2>
           <p className="text-shriram-muted text-[14px] sm:text-[15px] leading-relaxed max-w-2xl mx-auto">
-            Start with what you're saving for — the right fund follows automatically.
+            Select what you are saving for on the left, and choose the fund that fits your preferences below. The final choice remains fully in your hands.
           </p>
         </motion.div>
 
@@ -132,106 +117,85 @@ export default function GoalSelectStep() {
             </div>
           </div>
 
-          {/* ── RIGHT: Fund cards (goal-driven) ─────────────────────────── */}
+          {/* ── RIGHT: Mainstream Funds List (Always visible, manually chosen) ─────────────────────────── */}
           <div className="bg-white rounded-2xl border border-shriram-line shadow-card p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="text-[10.5px] font-bold uppercase tracking-wider text-shriram-muted">
-                  Recommended funds
+                  Available mutual funds
                 </div>
                 <h3 className="text-shriram-dark font-bold text-[16px] font-display mt-0.5">
-                  {goalId ? `Top picks for ${GOAL_BY_ID[goalId].label}` : 'Pick a goal first'}
+                  Select your preferred fund
                 </h3>
               </div>
-              {goalId && (
-                <div className="text-[11px] text-shriram-muted">
-                  {rankedFunds.length} matched
-                </div>
-              )}
+              <div className="text-[11px] text-shriram-muted">
+                {SHRIRAM_FUNDS.length} mainstream options
+              </div>
             </div>
 
-            {!goalId ? (
-              <EmptyFundState />
-            ) : (
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={goalId}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-3"
-                >
-                  {rankedFunds.map((f, i) => {
-                    const isFirst = i === 0
-                    const selected = fundId === f.id
-                    return (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => handleSelectFund(f.id)}
-                        className={`relative w-full text-left rounded-xl border-2 p-4 sm:p-5 transition-all duration-150 ${
-                          selected
-                            ? 'border-shriram-gold bg-shriram-gold/8 shadow-gold'
-                            : 'border-shriram-line bg-white hover:border-shriram-gold/40'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                              <h4 className="text-shriram-dark font-bold text-[15px] font-display tracking-tight truncate">
-                                {f.name}
-                              </h4>
-                              {isFirst && (
-                                <span className="text-[9.5px] font-bold uppercase tracking-wider text-shriram-dark bg-shriram-gold px-2 py-0.5 rounded-full shrink-0">
-                                  Best match
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-shriram-muted text-[11px] font-semibold">
-                              {f.category.replace(/_/g, ' ')}
-                            </span>
-                          </div>
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                            selected ? 'bg-shriram-gold text-shriram-dark' : 'bg-shriram-gold/10 text-shriram-gold'
-                          }`}>
-                            {selected ? <Check className="w-4.5 h-4.5" strokeWidth={3} /> : <TrendingUp className="w-4.5 h-4.5" />}
-                          </div>
+            <div className="space-y-3">
+              {SHRIRAM_FUNDS.map((f) => {
+                const selected = fundId === f.id
+
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => handleSelectFund(f.id)}
+                    className={`relative w-full text-left rounded-xl border-2 p-4 sm:p-5 transition-all duration-150 ${
+                      selected
+                        ? 'border-shriram-gold bg-shriram-gold/8 shadow-gold'
+                        : 'border-shriram-line bg-white hover:border-shriram-gold/40'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <h4 className="text-shriram-dark font-bold text-[15.5px] font-display tracking-tight truncate">
+                            {f.name}
+                          </h4>
                         </div>
+                        <span className="text-shriram-gold text-[11px] font-bold uppercase tracking-wider">
+                          {f.category.replace(/_/g, ' ')} Fund
+                        </span>
+                      </div>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                        selected ? 'bg-shriram-gold text-shriram-dark' : 'bg-shriram-gold/10 text-shriram-gold'
+                      }`}>
+                        {selected ? <Check className="w-4.5 h-4.5" strokeWidth={3} /> : <TrendingUp className="w-4.5 h-4.5" />}
+                      </div>
+                    </div>
 
-                        {/* Stats row */}
-                        <div className="grid grid-cols-3 gap-2 my-3">
-                          <Stat label="5-yr return" value={`${f.fiveYearReturn?.toFixed(1) ?? '—'}%`} accent />
-                          <Stat label="Risk"        value={f.riskLevel} />
-                          <Stat label="Expense"     value={`${f.expenseRatio?.toFixed(2) ?? '—'}%`} />
-                        </div>
+                    {/* Historical return benchmarks & stats */}
+                    <div className="grid grid-cols-4 gap-1.5 my-3">
+                      <Stat label="5y Return" value={`${f.fiveYearReturn?.toFixed(1) ?? '—'}% p.a.`} accent />
+                      <Stat label="3y Return" value={`${f.threeYearReturn?.toFixed(1) ?? '—'}% p.a.`} />
+                      <Stat label="1y Return" value={`${f.oneYearReturn?.toFixed(1) ?? '—'}% p.a.`} />
+                      <Stat label="Risk Level" value={f.riskLevel} />
+                    </div>
 
-                        <p className="text-shriram-muted text-[12.5px] leading-relaxed line-clamp-2 mb-2">
-                          {f.description}
-                        </p>
+                    <p className="text-shriram-muted text-[12.5px] leading-relaxed line-clamp-2 mb-3">
+                      {f.description}
+                    </p>
 
-                        {f.bestFor && (
-                          <div className="text-[11.5px] text-shriram-dark/80">
-                            <span className="font-semibold text-shriram-gold">Suited for: </span>
-                            <span className="line-clamp-1">{f.bestFor}</span>
-                          </div>
-                        )}
-                      </button>
-                    )
-                  })}
-                </motion.div>
-              </AnimatePresence>
-            )}
+                    {f.bestFor && (
+                      <div className="text-[11.5px] text-shriram-charcoal bg-shriram-cream/70 rounded-lg px-2.5 py-1.5 border border-shriram-line/30">
+                        <span className="font-extrabold text-shriram-gold text-[10px] uppercase tracking-wider block mb-0.5">Suitability:</span>
+                        <span className="leading-snug block">{f.bestFor}</span>
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
 
-            {goalId && (
-              <button
-                onClick={handleContinue}
-                disabled={!fundId}
-                className="btn-gold w-full mt-5 py-3.5 text-[14px] rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                See AI-recommended SIP <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
+            <button
+              onClick={handleContinue}
+              disabled={!goalId || !fundId}
+              className="btn-gold w-full mt-6 py-4 text-[14.5px] rounded-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-bold shadow-md transition-all"
+            >
+              See AI-recommended SIP <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -241,25 +205,12 @@ export default function GoalSelectStep() {
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="bg-shriram-cream border border-shriram-line rounded-lg px-2.5 py-1.5">
-      <div className="text-shriram-muted text-[9.5px] font-bold uppercase tracking-wider">{label}</div>
-      <div className={`text-[13px] font-bold font-display ${accent ? 'text-shriram-gold' : 'text-shriram-dark'}`}>
+    <div className="bg-shriram-cream border border-shriram-line/50 rounded-lg px-2 py-1 text-center">
+      <div className="text-shriram-muted text-[8.5px] font-extrabold uppercase tracking-wider">{label}</div>
+      <div className={`text-[11px] font-extrabold font-display whitespace-nowrap ${accent ? 'text-shriram-gold' : 'text-shriram-dark'}`}>
         {value}
       </div>
     </div>
   )
 }
 
-function EmptyFundState() {
-  return (
-    <div className="flex flex-col items-center justify-center text-center py-16 px-4">
-      <div className="w-14 h-14 rounded-full bg-shriram-gold/10 border-2 border-dashed border-shriram-gold/30 flex items-center justify-center mb-4">
-        <TrendingUp className="w-6 h-6 text-shriram-gold/60" />
-      </div>
-      <div className="text-shriram-dark font-bold text-[14px] mb-1">No goal selected yet</div>
-      <p className="text-shriram-muted text-[12.5px] leading-relaxed max-w-xs">
-        Pick a goal on the left and we'll instantly show the funds that align to your horizon and risk level.
-      </p>
-    </div>
-  )
-}

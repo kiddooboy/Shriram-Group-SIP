@@ -63,6 +63,11 @@ export interface KycData {
     aadhaar?:   UploadedFileMeta
     signature?: UploadedFileMeta
   }
+  videoKyc: {
+    verified: boolean
+    completedAt: string
+    verificationCode: string
+  }
   consents: {
     dataPrivacy:        boolean
     riskAcknowledged:   boolean
@@ -81,6 +86,7 @@ export const EMPTY_KYC: KycData = {
   nominee:    { name: '', relation: '', sharePct: 100, dob: '' },
   fatca:      { indianTaxResident: '', usPerson: '', otherTaxJurisdiction: '', politicallyExposed: '' },
   uploads:    {},
+  videoKyc:   { verified: false, completedAt: '', verificationCode: '8492' },
   consents:   { dataPrivacy: false, riskAcknowledged: false, debitAuthorisation: false, truthfulDeclaration: false },
 }
 
@@ -143,6 +149,11 @@ export const DEMO_KYC: KycData = {
     aadhaar:   { name: 'aadhaar.jpg',   size: 312_864, type: 'image/jpeg' },
     signature: { name: 'signature.png', size:  87_232, type: 'image/png'  },
   },
+  videoKyc: {
+    verified: true,
+    completedAt: '2026-05-28 12:45:00',
+    verificationCode: '8492',
+  },
   consents: {
     dataPrivacy:         true,
     riskAcknowledged:    true,
@@ -153,19 +164,20 @@ export const DEMO_KYC: KycData = {
 
 // ── Section metadata (drives progress tracker and navigation) ────────────────
 export type SectionKey =
-  | 'personal' | 'pan' | 'aadhaar' | 'address' | 'occupation'
-  | 'bank' | 'nominee' | 'fatca' | 'uploads' | 'consents' | 'review'
+  | 'pan' | 'aadhaar' | 'personal' | 'address' | 'occupation'
+  | 'bank' | 'nominee' | 'fatca' | 'uploads' | 'videoKyc' | 'consents' | 'review'
 
 export const SECTIONS: { key: SectionKey; label: string; short: string }[] = [
-  { key: 'personal',   label: 'Personal details',     short: 'Personal' },
   { key: 'pan',        label: 'PAN verification',     short: 'PAN' },
   { key: 'aadhaar',    label: 'Aadhaar verification', short: 'Aadhaar' },
-  { key: 'address',    label: 'Address',              short: 'Address' },
+  { key: 'personal',   label: 'Personal details',     short: 'Personal' },
+  { key: 'address',    label: 'Address details',      short: 'Address' },
   { key: 'occupation', label: 'Occupation & income',  short: 'Income' },
   { key: 'bank',       label: 'Bank account',         short: 'Bank' },
-  { key: 'nominee',    label: 'Nominee',              short: 'Nominee' },
+  { key: 'nominee',    label: 'Nominee details',      short: 'Nominee' },
   { key: 'fatca',      label: 'FATCA declaration',    short: 'FATCA' },
   { key: 'uploads',    label: 'Document upload',      short: 'Uploads' },
+  { key: 'videoKyc',   label: 'Video KYC',            short: 'Video' },
   { key: 'consents',   label: 'Consents',             short: 'Consents' },
   { key: 'review',     label: 'Review & submit',      short: 'Review' },
 ]
