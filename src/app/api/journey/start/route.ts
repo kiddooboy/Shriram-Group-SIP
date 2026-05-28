@@ -37,15 +37,18 @@ export async function POST(req: NextRequest) {
       ipAddress:  req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip'),
     })
 
-    // Compose KYC resume link. Origin is inferred from the incoming request
-    // so this works in dev (localhost) as well as production (shriramgsip.online).
+    // Compose resume link (still returned to the client so the "Continue Now"
+    // button can navigate to it directly — but it is NOT included in the SMS,
+    // since Fast2SMS Quick route flags URLs as spam and disables the account.
     const origin = req.headers.get('origin')
       || (req.headers.get('host') ? `https://${req.headers.get('host')}` : '')
     const resumeLink = `${origin}/k/${journey.resume_token}`
 
+    const shortRef = `GSIP-${String(journey.id).padStart(6, '0')}`
+    const fundLabel = (journey.fund_name ?? 'SIP').slice(0, 28)
     const message =
-      `Shriram Group SIP: Complete your KYC to activate the SIP. ` +
-      `Resume here: ${resumeLink} (valid 48 hrs). - Shriram AMC`
+      `Shriram Group SIP: Your KYC enrolment for ${fundLabel} is queued. ` +
+      `Ref ${shortRef}. Complete it within 48 hours to activate. - Shriram AMC`
 
     const sms = await sendSMS(journey.mobile, message)
 
