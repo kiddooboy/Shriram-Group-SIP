@@ -1,0 +1,32 @@
+name: Diagnose OTP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH diagnostics
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 5m
+          script: |
+            cd ~/shriram-group-sip
+
+            echo "===== last 250 lines of pm2 logs, journey & sms only ====="
+            pm2 logs shriram-sip --nostream --lines 500 2>/dev/null | grep -iE "journey|sms|fast2sms|otp\]" | tail -80 || echo "(no matches)"
+
+            echo ""
+            echo "===== full last 80 raw pm2 log lines ====="
+            pm2 logs shriram-sip --nostream --lines 80 2>/dev/null | tail -80 || echo "(no logs)"
+
+            echo ""
+            echo "===== Fast2SMS wallet ====="
+            KEY=$(grep '^FAST2SMS_API_KEY=' .env.local | cut -d= -f2)
+            curl -s "https://www.fast2sms.com/dev/wallet?authorization=${KEY}" || echo "(wallet curl failed)"
+            echo ""
+            echo "===== done ====="
