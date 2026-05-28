@@ -1,99 +1,27 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, AlertCircle, ShieldCheck, RefreshCw } from 'lucide-react'
-import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  ConfirmationResult,
-} from 'firebase/auth'
-import { getFirebaseAuth } from '@/lib/firebase'
 import { useSIPStore, createDefaultEmployee } from '@/store/useSIPStore'
 
 type Phase = 'form' | 'otp' | 'verifying'
 
-declare global {
-  interface Window { recaptchaVerifier?: RecaptchaVerifier }
-}
-
 export default function LoginStep() {
   const { setEmpId, setEmployeeName, setMobile, setEmployee, setRegistrationId, goNext } = useSIPStore()
 
-  const [phase, setPhase]           = useState<Phase>('form')
-  const [empId, setEmpIdLocal]      = useState('')
-  const [name, setName]             = useState('')
-  const [mobile, setMobileLocal]    = useState('')
-  const [otp, setOtp]               = useState(['', '', '', '', '', ''])
-  const [error, setError]           = useState('')
-  const [sending, setSending]       = useState(false)
+  const [phase, setPhase]        = useState<Phase>('form')
+  const [empId, setEmpIdLocal]   = useState('')
+  const [name, setName]          = useState('')
+  const [mobile, setMobileLocal] = useState('')
+  const [otp, setOtp]            = useState(['', '', '', '', '', ''])
+  const [error, setError]        = useState('')
+  const [sending, setSending]    = useState(false)
   const [resendCooldown, setResend] = useState(0)
+  const [devOtp, setDevOtp]      = useState<string | null>(null)
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const confirmRef   = useRef<ConfirmationResult | null>(null)
-  const cooldownRef  = useRef<ReturnType<typeof setInterval> | null>(null)
-  const captchaReady = useRef(false)
-
-  // ── Pre-render invisible reCAPTCHA once the component mounts ────────────
-  useEffect(() => {
-    const t = setTimeout(() => {
-      try {
-        const fbAuth = getFirebaseAuth()
-        if (window.recaptchaVerifier) {
-          try { window.recaptchaVerifier.clear() } catch (_) {}
-        }
-        const verifier = new RecaptchaVerifier(fbAuth, 'recaptcha-container', {
-          size: 'invisible',
-          callback: () => {},
-          'expired-callback': () => { captchaReady.current = false },
-        })
-        verifier.render().then(() => {
-          window.recaptchaVerifier = verifier
-          captchaReady.current = true
-          console.log('[OTP] reCAPTCHA pre-rendered OK')
-        }).catch(e => console.error('[OTP] reCAPTCHA render error:', e))
-      } catch (e) {
-        console.error('[OTP] reCAPTCHA setup error:', e)
-      }
-    }, 300)
-
-    return () => {
-      clearTimeout(t)
-      if (cooldownRef.current) clearInterval(cooldownRef.current)
-      try { window.recaptchaVerifier?.clear(); window.recaptchaVerifier = undefined } catch (_) {}
-    }
-  }, [])
-
-  // ── Re-init reCAPTCHA after a failure or resend ──────────────────────────
-  async function resetRecaptcha(): Promise<RecaptchaVerifier> {
-    try { window.recaptchaVerifier?.clear(); window.recaptchaVerifier = undefined } catch (_) {}
-    captchaReady.current = false
-
-    const fbAuth = getFirebaseAuth()
-    const verifier = new RecaptchaVerifier(fbAuth, 'recaptcha-container', {
-      size: 'invisible',
-      callback: () => {},
-      'expired-callback': () => { captchaReady.current = false },
-    })
-    await verifier.render()
-    window.recaptchaVerifier = verifier
-    captchaReady.current = true
-    return verifier
-  }
-
-  function friendlyFirebaseError(code: string | undefined): string {
-    switch (code) {
-      case 'auth/invalid-phone-number':   return 'Invalid phone number — please check and try again.'
-      case 'auth/too-many-requests':       return 'Too many attempts on this number. Please wait a few minutes and try again.'
-      case 'auth/quota-exceeded':          return "Today's SMS quota has been reached. Please try again tomorrow."
-      case 'auth/billing-not-enabled':     return 'SMS service not ready yet — please retry in a minute.'
-      case 'auth/unauthorized-domain':     return 'This domain is not authorised. Please contact support.'
-      case 'auth/captcha-check-failed':    return 'Security check failed. Please refresh the page and try again.'
-      case 'auth/network-request-failed':  return 'Network error. Please check your connection and try again.'
-      default:                              return 'Failed to send OTP. Please refresh the page and try again.'
-    }
-  }
-
-  // ── Send OTP via Firebase ────────────────────────────────────────────────
+  // ── Send OTP via our own API ──────────────────────────────────────────────
   async function handleSendOTP() {
     if (!empId.trim())             { setError('Please enter your Employee ID'); return }
     if (!name.trim())              { setError('Please enter your full name'); return }
@@ -102,19 +30,31 @@ export default function LoginStep() {
     setSending(true)
 
     try {
-      const fbAuth = getFirebaseAuth()
-      const verifier = captchaReady.current && window.recaptchaVerifier
-        ? window.recaptchaVerifier
-        : await resetRecaptcha()
+      const res  = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile }),
+      })
+      const data = await res.json()
 
-      const result = await signInWithPhoneNumber(fbAuth, `+91${mobile}`, verifier)
-      confirmRef.current = result
+      if (!res.ok) {
+        setError(data.error ?? 'Failed to send OTP. Please try again.')
+        return
+      }
+
+      const issued: string | null = data.devOtp ?? null
+      setDevOtp(issued)
+      // Demo autofill: drop the 6 digits straight into the inputs so the
+      // presenter can just click "Verify & continue".
+      if (issued && /^\d{6}$/.test(issued)) {
+        setOtp(issued.split(''))
+      } else {
+        setOtp(['', '', '', '', '', ''])
+      }
       setPhase('otp')
       startResendCooldown()
-    } catch (err: any) {
-      console.error('[OTP] Send error — code:', err?.code, '| message:', err?.message)
-      try { await resetRecaptcha() } catch (_) {}
-      setError(friendlyFirebaseError(err?.code))
+    } catch {
+      setError('Network error. Please check your connection and try again.')
     } finally {
       setSending(false)
     }
@@ -136,14 +76,19 @@ export default function LoginStep() {
     setError('')
     setSending(true)
     try {
-      const fbAuth   = getFirebaseAuth()
-      const verifier = await resetRecaptcha()
-      const result   = await signInWithPhoneNumber(fbAuth, `+91${mobile}`, verifier)
-      confirmRef.current = result
+      const res  = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Resend failed. Please try again.'); return }
+      const issued: string | null = data.devOtp ?? null
+      setDevOtp(issued)
+      if (issued && /^\d{6}$/.test(issued)) setOtp(issued.split(''))
       startResendCooldown()
-    } catch (err: any) {
-      console.error('[OTP] Resend error:', err?.code, err?.message)
-      setError(friendlyFirebaseError(err?.code))
+    } catch {
+      setError('Network error. Please try again.')
     } finally {
       setSending(false)
     }
@@ -157,26 +102,36 @@ export default function LoginStep() {
     if (next.every(d => d !== '')) handleVerify(next)
   }
 
-  // ── Verify OTP via Firebase ──────────────────────────────────────────────
+  // ── Verify OTP via our API ────────────────────────────────────────────────
   async function handleVerify(digits = otp) {
     const code = digits.join('')
-    if (code.length < 6)     { setError('Please enter the complete 6-digit OTP'); return }
-    if (!confirmRef.current) { setError('Session expired — please resend OTP'); return }
+    if (code.length < 6) { setError('Please enter the complete 6-digit OTP'); return }
     setError('')
     setPhase('verifying')
 
     try {
-      await confirmRef.current.confirm(code)
+      const res  = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile, otp: code }),
+      })
+      const data = await res.json()
 
-      // Save registration to our DB (non-blocking)
+      if (!res.ok) {
+        setPhase('otp')
+        setError(data.error ?? 'Verification failed. Please try again.')
+        return
+      }
+
+      // Save registration to SQLite (non-blocking)
       try {
-        const res = await fetch('/api/register', {
+        const reg = await fetch('/api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ employeeId: empId.trim().toUpperCase(), name: name.trim(), mobile: mobile.trim() }),
         })
-        const data = await res.json()
-        if (data.success && data.registration?.id) setRegistrationId(data.registration.id)
+        const regData = await reg.json()
+        if (regData.success && regData.registration?.id) setRegistrationId(regData.registration.id)
       } catch (_) {}
 
       setEmpId(empId.trim().toUpperCase())
@@ -185,23 +140,15 @@ export default function LoginStep() {
       setEmployee(createDefaultEmployee(empId.trim().toUpperCase(), name.trim(), mobile.trim()))
       setTimeout(() => goNext(), 1200)
 
-    } catch (err: any) {
-      console.error('[OTP] Verify error:', err?.code, err?.message)
+    } catch {
       setPhase('otp')
-      setError(
-        err?.code === 'auth/invalid-verification-code' ? 'Incorrect OTP — please check and try again.' :
-        err?.code === 'auth/code-expired'              ? 'OTP has expired. Please request a new one.' :
-                                                          'Verification failed. Please try again.'
-      )
+      setError('Network error. Please try again.')
     }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-[calc(100vh-120px)] bg-shriram-cream flex items-center justify-center px-4 py-12">
-      {/* Invisible reCAPTCHA anchor — must stay in DOM */}
-      <div id="recaptcha-container" style={{ position: 'absolute', bottom: 0, left: 0 }} />
-
       <div className="w-full max-w-md">
         {/* Step indicator */}
         <div className="flex items-center gap-2 justify-center mb-8">
@@ -238,7 +185,7 @@ export default function LoginStep() {
                   Employee sign-in
                 </h2>
                 <p className="text-shriram-muted text-[13.5px] mb-8">
-                  Enter your details — we'll send a real OTP to your mobile number via Firebase.
+                  Enter your details — we'll generate a 6-digit OTP for verification.
                 </p>
 
                 <div className="space-y-5">
@@ -297,7 +244,7 @@ export default function LoginStep() {
                   }
                 </button>
                 <p className="text-shriram-muted text-[11.5px] text-center mt-4 leading-relaxed">
-                  A 6-digit OTP will be sent to your mobile via SMS.
+                  A 6-digit OTP will be issued for your registered mobile number.
                 </p>
               </motion.div>
             )}
@@ -308,10 +255,22 @@ export default function LoginStep() {
                 <h2 className="text-[26px] font-bold text-shriram-dark font-display tracking-tight mt-2 mb-1">
                   Enter OTP
                 </h2>
-                <p className="text-shriram-muted text-[13.5px] mb-8">
-                  6-digit OTP sent to{' '}
+                <p className="text-shriram-muted text-[13.5px] mb-6">
+                  6-digit OTP issued for{' '}
                   <span className="font-bold text-shriram-dark">+91 {mobile.slice(0, 5)}·····</span>
                 </p>
+
+                {devOtp && (
+                  <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                      <div className="text-[12.5px] text-amber-900 leading-relaxed">
+                        <span className="font-bold">Demo mode — SMS gateway is not active.</span> Use this OTP to continue:
+                        <div className="mt-2 text-[22px] font-bold tracking-[0.5em] text-amber-900 font-mono">{devOtp}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-3 justify-between mb-3">
                   {otp.map((digit, idx) => (
@@ -351,7 +310,7 @@ export default function LoginStep() {
                     className="flex items-center gap-1.5 text-[13px] font-semibold text-shriram-gold disabled:text-shriram-muted/40 disabled:cursor-not-allowed transition-colors"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
-                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
+                    {resendCooldown > 0 ? 'Resend in ' + resendCooldown + 's' : 'Resend OTP'}
                   </button>
                 </div>
               </motion.div>
@@ -364,7 +323,7 @@ export default function LoginStep() {
                   <ShieldCheck className="w-7 h-7 text-shriram-gold absolute inset-0 m-auto" />
                 </div>
                 <p className="text-shriram-dark font-bold text-[16px]">Verifying OTP…</p>
-                <p className="text-shriram-muted text-[13px] mt-1.5">Confirming with Firebase</p>
+                <p className="text-shriram-muted text-[13px] mt-1.5">Please wait a moment</p>
               </motion.div>
             )}
 
