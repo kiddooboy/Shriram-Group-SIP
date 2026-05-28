@@ -194,7 +194,7 @@ export default function GoalSelectStep() {
               disabled={!goalId || !fundId}
               className="btn-gold w-full mt-6 py-4 text-[14.5px] rounded-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-bold shadow-md transition-all"
             >
-              See AI-recommended SIP <ArrowRight className="w-4 h-4" />
+              Proceed <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
