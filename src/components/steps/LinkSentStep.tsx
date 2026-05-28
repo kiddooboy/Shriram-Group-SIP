@@ -182,21 +182,21 @@ export default function LinkSentStep() {
                 <div className="flex items-center justify-between text-[12.5px]">
                   <span className="flex items-center gap-2 text-shriram-charcoal font-semibold">
                     <span className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] text-emerald-800 font-extrabold">✓</span>
-                    Phase 1: SIP Plan & Setup
+                    Step 1: SIP Plan & Custom Setup
                   </span>
                   <span className="text-[11px] font-bold text-emerald-600">Done ({displaySeconds}s)</span>
                 </div>
                 <div className="flex items-center justify-between text-[12.5px]">
                   <span className="flex items-center gap-2 text-shriram-dark font-extrabold">
                     <span className="w-5 h-5 rounded-full bg-shriram-gold text-shriram-dark flex items-center justify-center text-[10px] font-extrabold animate-pulse">2</span>
-                    Phase 2: e-KYC Verification
+                    Step 2: Secure e-KYC & ID Verification
                   </span>
                   <span className="text-[11px] font-bold text-shriram-gold">Pending (takes ~2 min)</span>
                 </div>
                 <div className="flex items-center justify-between text-[12.5px] opacity-50">
                   <span className="flex items-center gap-2 text-shriram-muted">
                     <span className="w-5 h-5 rounded-full bg-shriram-line flex items-center justify-center text-[10px] font-extrabold">3</span>
-                    Phase 3: Auto-Remittance Remit
+                    Step 3: Salary Linkage & Auto-Deduction
                   </span>
                   <span className="text-[11px]">Next Step</span>
                 </div>

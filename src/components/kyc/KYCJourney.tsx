@@ -258,7 +258,7 @@ function Greeting({ journey, progressPct, sectionIdx, saving }: {
   return (
     <div className="bg-white rounded-2xl border border-shriram-line p-5 sm:p-6 shadow-card flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
       <div className="flex-1">
-        <span className="eyebrow-dark">e-KYC · Phase 2</span>
+        <span className="eyebrow-dark">Secure e-KYC Verification 🔒</span>
         <h1 className="text-[22px] sm:text-[26px] font-bold font-display text-shriram-dark tracking-tight mt-1">
           Welcome back, {journey.name.split(' ')[0] || 'Investor'}
         </h1>

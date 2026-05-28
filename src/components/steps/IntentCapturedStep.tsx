@@ -87,14 +87,14 @@ export default function IntentCapturedStep() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <span className="eyebrow text-shriram-gold block mb-2">Phase 1 Complete · Intent Captured</span>
+            <span className="eyebrow text-shriram-gold block mb-2">Smart Choice! · Investment Setup Locked</span>
             <h2 className="text-[26px] font-bold text-shriram-dark font-display tracking-tight mb-3">
               You're interested in<br />
               <span className="text-shriram-gold">{fund.shortName}.</span>
             </h2>
-            <p className="text-shriram-muted text-[14px] leading-relaxed">
-              That's Phase 1 done — in one click. Nothing has been debited yet.
-              Complete your KYC to activate the SIP. It takes about 2 minutes.
+            <p className="text-shriram-muted text-[14.5px] leading-relaxed">
+              Your investment setup is completed in a flash! 🔒 No funds have been debited yet.
+              Complete your secure e-KYC in under 2 minutes to activate your wealth engine today.
             </p>
           </motion.div>
 
