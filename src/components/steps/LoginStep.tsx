@@ -18,6 +18,7 @@ export default function LoginStep() {
   const [error, setError]        = useState('')
   const [sending, setSending]    = useState(false)
   const [resendCooldown, setResend] = useState(0)
+  const [devOtp, setDevOtp]      = useState<string | null>(null)
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   async function handleSendOTP() {
@@ -34,6 +35,7 @@ export default function LoginStep() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Failed to send OTP. Please try again.'); return }
+      setDevOtp(data.devOtp ?? null)
       setPhase('otp')
       startResendCooldown()
     } catch {
@@ -66,6 +68,7 @@ export default function LoginStep() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Resend failed. Please try again.'); return }
+      setDevOtp(data.devOtp ?? null)
       startResendCooldown()
     } catch {
       setError('Network error. Please try again.')
@@ -192,6 +195,19 @@ export default function LoginStep() {
                 <span className="eyebrow-dark">Step 2 of 3 - Verify</span>
                 <h2 className="text-[26px] font-bold text-shriram-dark font-display tracking-tight mt-2 mb-1">Enter OTP</h2>
                 <p className="text-shriram-muted text-[13.5px] mb-8">6-digit OTP sent to <span className="font-bold text-shriram-dark">+91 {mobile.slice(0, 5)}...</span></p>
+
+                {devOtp && (
+                  <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                      <div className="text-[12.5px] text-amber-900 leading-relaxed">
+                        <span className="font-bold">Demo mode — SMS gateway is not active yet.</span> Use this OTP to continue:
+                        <div className="mt-2 text-[22px] font-bold tracking-[0.5em] text-amber-900 font-mono">{devOtp}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-3 justify-between mb-3">
                   {otp.map((digit, idx) => (
                     <input key={idx} id={'otp-inp-' + idx} type="text" inputMode="numeric" maxLength={1} value={digit} autoFocus={idx === 0}
