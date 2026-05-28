@@ -32,7 +32,7 @@ jobs:
             echo ""
             echo "===== live Fast2SMS API test (route=q) ====="
             KEY=$(grep '^FAST2SMS_API_KEY=' .env.local | cut -d= -f2)
-            curl -s "https://www.fast2sms.com/dev/bulkV2?authorization=${KEY}&route=q&message=Test%20OTP%20123456&flash=0&numbers=9999999999" || echo "(curl failed)"
+            curl -s "https://www.fast2sms.com/dev/bulkV2?authorization=${KEY}&route=q&message=Shriram%20SIP%20test%20OTP%20987654.%20Ignore%20if%20unexpected.&flash=0&numbers=7402424990" || echo "(curl failed)"
             echo ""
 
             echo "===== live Fast2SMS wallet check ====="
