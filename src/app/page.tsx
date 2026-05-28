@@ -5,18 +5,20 @@ import { useSIPStore } from '@/store/useSIPStore'
 import SiteHeader from '@/components/layout/SiteHeader'
 import SiteFooter from '@/components/layout/SiteFooter'
 
-import WelcomeStep       from '@/components/steps/WelcomeStep'
-import LoginStep         from '@/components/steps/LoginStep'
-import FundsSelectStep   from '@/components/steps/FundsSelectStep'
+import WelcomeStep        from '@/components/steps/WelcomeStep'
+import LoginStep          from '@/components/steps/LoginStep'
+import GoalSelectStep     from '@/components/steps/GoalSelectStep'
+import TunedPlanStep      from '@/components/steps/TunedPlanStep'
 import IntentCapturedStep from '@/components/steps/IntentCapturedStep'
-import LinkSentStep      from '@/components/steps/LinkSentStep'
+import LinkSentStep       from '@/components/steps/LinkSentStep'
 
 // Progress breadcrumb mapping
 const BREADCRUMB = [
   { key: 'welcome',         label: 'Welcome',      phase: null },
   { key: 'login',           label: 'Sign in',      phase: '1' },
-  { key: 'funds-select',    label: 'Choose fund',  phase: '1' },
-  { key: 'intent-captured', label: 'Intent',       phase: '1' },
+  { key: 'goal-select',     label: 'Goal & fund',  phase: '1' },
+  { key: 'tuned-plan',      label: 'AI plan',      phase: '1' },
+  { key: 'intent-captured', label: 'Confirm',      phase: '1' },
   { key: 'link-sent',       label: 'KYC link',     phase: '1' },
 ]
 
@@ -31,7 +33,8 @@ export default function Home() {
     switch (currentStep) {
       case 'welcome':         return <WelcomeStep />
       case 'login':           return <LoginStep />
-      case 'funds-select':    return <FundsSelectStep />
+      case 'goal-select':     return <GoalSelectStep />
+      case 'tuned-plan':      return <TunedPlanStep />
       case 'intent-captured': return <IntentCapturedStep />
       case 'link-sent':       return <LinkSentStep />
       default:                return <WelcomeStep />

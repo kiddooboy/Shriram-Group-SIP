@@ -11,9 +11,11 @@ import { SHRIRAM_FUNDS } from '@/lib/funds'
 export default function LinkSentStep() {
   const {
     employeeName, mobile, selectedFundId, empId, consentChecked,
+    tunedSIPAmount, tunedDurationYrs,
     registrationId, resumeToken, setResumeToken, reset,
   } = useSIPStore()
   const fund = SHRIRAM_FUNDS.find(f => f.id === selectedFundId) || SHRIRAM_FUNDS[0]
+  const sipAmount = tunedSIPAmount && tunedSIPAmount > 0 ? tunedSIPAmount : 500
 
   const [resent, setResent]   = useState(false)
   const [resending, setSending] = useState(false)
@@ -40,7 +42,7 @@ export default function LinkSentStep() {
           mobile:        mobile || '',
           fundId:        fund.id,
           fundName:      fund.name,
-          suggestedSip:  500,
+          suggestedSip:  sipAmount,
           consentStatus: consentChecked ? 'given' : 'given',
         }),
       })
@@ -161,7 +163,8 @@ export default function LinkSentStep() {
                 { label: 'Name',          value: employeeName || 'Employee' },
                 { label: 'Employee ID',   value: empId || '—' },
                 { label: 'Fund',          value: fund.shortName },
-                { label: 'Suggested SIP', value: '₹500 / month' },
+                { label: 'Monthly SIP',   value: `₹${sipAmount.toLocaleString('en-IN')} / month` },
+                { label: 'Duration',      value: `${tunedDurationYrs || 10} years` },
               ].map(row => (
                 <div key={row.label} className="flex justify-between items-center py-1.5 border-b border-shriram-line/50 last:border-0">
                   <span className="text-shriram-muted text-[12.5px]">{row.label}</span>

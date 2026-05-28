@@ -5,13 +5,17 @@ import { motion } from 'framer-motion'
 import { Check, ArrowRight, Loader2 } from 'lucide-react'
 import { useSIPStore } from '@/store/useSIPStore'
 import { SHRIRAM_FUNDS } from '@/lib/funds'
+import { GOAL_BY_ID, InvestmentGoalId } from '@/lib/investment-goals'
 
 export default function IntentCapturedStep() {
   const {
     selectedFundId, empId, employeeName, mobile, consentChecked,
+    investmentGoalId, tunedSIPAmount, tunedDurationYrs,
     resumeToken, setResumeToken, goNext,
   } = useSIPStore()
   const fund = SHRIRAM_FUNDS.find(f => f.id === selectedFundId) || SHRIRAM_FUNDS[0]
+  const goal = investmentGoalId ? GOAL_BY_ID[investmentGoalId as InvestmentGoalId] : null
+  const sipAmount = tunedSIPAmount && tunedSIPAmount > 0 ? tunedSIPAmount : 500
   const [saving, setSaving] = useState(true)
   const [saved, setSaved] = useState(false)
 
@@ -30,7 +34,7 @@ export default function IntentCapturedStep() {
             employeeId: empId || 'DEMO',
             fundId: fund.id,
             fundName: fund.name,
-            suggestedSip: 500,
+            suggestedSip: sipAmount,
           }),
         }).catch(() => {})
 
@@ -44,7 +48,7 @@ export default function IntentCapturedStep() {
             mobile:        mobile || '',
             fundId:        fund.id,
             fundName:      fund.name,
-            suggestedSip:  500,
+            suggestedSip:  sipAmount,
             consentStatus: consentChecked ? 'given' : 'given',
           }),
         })
@@ -62,7 +66,7 @@ export default function IntentCapturedStep() {
     }
     run()
     return () => { cancelled = true }
-  }, [resumeToken, empId, employeeName, mobile, consentChecked, fund.id, fund.name, setResumeToken])
+  }, [resumeToken, empId, employeeName, mobile, consentChecked, fund.id, fund.name, sipAmount, setResumeToken])
 
   return (
     <section className="min-h-[calc(100vh-120px)] bg-shriram-cream flex items-center justify-center px-4 py-16">
@@ -105,8 +109,10 @@ export default function IntentCapturedStep() {
               Your provisional plan
             </div>
             {[
+              ...(goal ? [{ label: 'Goal', value: goal.label }] : []),
               { label: 'Fund', value: fund.name },
-              { label: 'Suggested SIP', value: '₹500 / month' },
+              { label: 'Monthly SIP', value: `₹${sipAmount.toLocaleString('en-IN')} / month` },
+              { label: 'Duration', value: `${tunedDurationYrs || 10} years` },
               { label: 'Source', value: 'Salary deduction' },
               { label: 'Status', value: saving ? 'Saving…' : '✓ Intent registered' },
             ].map(row => (

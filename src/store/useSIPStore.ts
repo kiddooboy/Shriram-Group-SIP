@@ -43,11 +43,17 @@ interface SIPStore {
   // ── Two-Phase Selections ──────────────────────────────────────────────
   selectedFundId: string | null
   selectedGoal: string | null
+  /** New 10-goal taxonomy (separate from legacy PrimaryGoal used by AI engine). */
+  investmentGoalId: string | null
   tunedSIPAmount: number
+  /** Investment horizon in years — driven by goal default, overridable by the user on the recommendation page. */
+  tunedDurationYrs: number
   consentChecked: boolean
   setSelectedFundId: (id: string | null) => void
   setSelectedGoal: (goal: string | null) => void
+  setInvestmentGoalId: (id: string | null) => void
   setTunedSIPAmount: (amt: number) => void
+  setTunedDurationYrs: (yrs: number) => void
   setConsentChecked: (checked: boolean) => void
 
   // ── Adaptive questionnaire (M8 belief state) ─────────────────────────
@@ -76,9 +82,9 @@ interface SIPStore {
   reset: () => void
 }
 
-// Phase 1 only main flow — Phase 2 steps exist but are future/separate flow
+// Main onboarding flow: identity → goal-based fund selection → AI plan → consent → KYC link.
 const STEP_ORDER: JourneyStep[] = [
-  'welcome', 'login', 'funds-select', 'intent-captured', 'link-sent',
+  'welcome', 'login', 'goal-select', 'tuned-plan', 'intent-captured', 'link-sent',
 ]
 
 const GOAL_HORIZONS: Record<string, number> = {
@@ -154,7 +160,9 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
   // ── Two-Phase Selections ──────────────────────────────────────────────
   selectedFundId: null,
   selectedGoal: null,
+  investmentGoalId: null,
   tunedSIPAmount: 500,
+  tunedDurationYrs: 10,
   consentChecked: false,
   setSelectedFundId: (id) => set({ selectedFundId: id }),
   setSelectedGoal: (goal) => {
@@ -164,7 +172,9 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
     const q = recordAnswer(get().questionnaire, 'GOALS', [{ type: goal as any, horizonYears: horizon, targetAmount: target }])
     set({ selectedGoal: goal, questionnaire: q })
   },
+  setInvestmentGoalId: (id) => set({ investmentGoalId: id }),
   setTunedSIPAmount: (amt) => set({ tunedSIPAmount: amt }),
+  setTunedDurationYrs: (yrs) => set({ tunedDurationYrs: yrs }),
   setConsentChecked: (checked) => set({ consentChecked: checked }),
 
   // ── Questionnaire ─────────────────────────────────────────────────────
@@ -206,7 +216,8 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
     currentStep: 'welcome',
     empId: '', employeeName: '', mobile: '', registrationId: null, resumeToken: null,
     employee: null,
-    selectedFundId: null, selectedGoal: null, tunedSIPAmount: 500, consentChecked: false,
+    selectedFundId: null, selectedGoal: null, investmentGoalId: null,
+    tunedSIPAmount: 500, tunedDurationYrs: 10, consentChecked: false,
     questionnaire: initQuestionnaire(), currentQuestion: 'FAMILY',
     recommendation: null, adjustedSIP: null, adjustedTenure: null, adjustedFund: null,
     mandate: null,
