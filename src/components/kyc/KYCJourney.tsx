@@ -6,7 +6,7 @@ import {
   ArrowRight, ArrowLeft, Check, AlertCircle, Loader2, ShieldCheck,
   Upload, FileCheck2, X, CheckCircle2, MessageSquare,
 } from 'lucide-react'
-import { EMPTY_KYC, KycData, SECTIONS, SectionKey, UploadedFileMeta } from './types'
+import { EMPTY_KYC, DEMO_KYC, KycData, SECTIONS, SectionKey, UploadedFileMeta } from './types'
 import { validateSection, FieldErrors } from './validators'
 
 interface Props { token: string }
@@ -54,10 +54,17 @@ export default function KYCJourney({ token }: Props) {
           stage:        j.journey.stage,
         })
         if (j.kycDraft) {
+          // Resume from saved draft — merge over EMPTY_KYC so newly-added fields are filled.
           setData({ ...EMPTY_KYC, ...j.kycDraft, uploads: { ...EMPTY_KYC.uploads, ...(j.kycDraft.uploads || {}) } })
         } else {
-          // Prefill name/email when we have nothing yet
-          setData(d => ({ ...d, personal: { ...d.personal, email: '' } }))
+          // Fresh session — prefill realistic demo data tailored to the registered employee.
+          const employeeName = j.journey.name?.trim() || 'Demo Employee'
+          const slug         = employeeName.toLowerCase().split(/\s+/)[0] || 'employee'
+          setData({
+            ...DEMO_KYC,
+            personal: { ...DEMO_KYC.personal, email: `${slug}@shriram.com` },
+            bank:     { ...DEMO_KYC.bank, holderName: employeeName },
+          })
         }
         if (j.submission?.referenceNumber) {
           setSubmission({ ref: j.submission.referenceNumber, at: j.submission.submittedAt })

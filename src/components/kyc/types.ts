@@ -84,6 +84,73 @@ export const EMPTY_KYC: KycData = {
   consents:   { dataPrivacy: false, riskAcknowledged: false, debitAuthorisation: false, truthfulDeclaration: false },
 }
 
+// ── Demo prefill ──────────────────────────────────────────────────────────────
+// Realistic placeholder values so a presenter can click through the KYC in a
+// live demo without typing every field. Mirrors a Chennai-based Shriram
+// employee profile. All values pass the validators in ./validators.ts.
+export const DEMO_KYC: KycData = {
+  personal: {
+    dob:           '1992-08-15',
+    gender:        'male',
+    maritalStatus: 'married',
+    fatherName:    'Ramachandran N',
+    motherName:    'Lakshmi Ramachandran',
+    email:         'employee@shriram.com',
+  },
+  pan: {
+    number: 'AKLPS3492J',
+  },
+  aadhaar: {
+    number:       '234567890123',
+    linkedMobile: true,
+  },
+  address: {
+    line1:   'Flat 304, Pearl Residency',
+    line2:   'Sardar Patel Road, T. Nagar',
+    city:    'Chennai',
+    state:   'Tamil Nadu',
+    pincode: '600017',
+    country: 'India',
+  },
+  occupation: {
+    occupation:    'salaried',
+    employer:      'Shriram Finance',
+    annualIncome:  '5L-10L',
+    sourceOfFunds: 'Salary',
+  },
+  bank: {
+    accountNumber:        '04531234567890',
+    confirmAccountNumber: '04531234567890',
+    ifsc:                 'HDFC0001234',
+    branchName:           'T. Nagar, Chennai',
+    holderName:           'Demo Employee',
+    accountType:          'savings',
+  },
+  nominee: {
+    name:     'Priya N',
+    relation: 'Spouse',
+    sharePct: 100,
+    dob:      '1994-03-22',
+  },
+  fatca: {
+    indianTaxResident:    'yes',
+    usPerson:             'no',
+    otherTaxJurisdiction: '',
+    politicallyExposed:   'no',
+  },
+  uploads: {
+    panCard:   { name: 'pan-card.jpg',  size: 245_120, type: 'image/jpeg' },
+    aadhaar:   { name: 'aadhaar.jpg',   size: 312_864, type: 'image/jpeg' },
+    signature: { name: 'signature.png', size:  87_232, type: 'image/png'  },
+  },
+  consents: {
+    dataPrivacy:         true,
+    riskAcknowledged:    true,
+    debitAuthorisation:  true,
+    truthfulDeclaration: true,
+  },
+}
+
 // ── Section metadata (drives progress tracker and navigation) ────────────────
 export type SectionKey =
   | 'personal' | 'pan' | 'aadhaar' | 'address' | 'occupation'
