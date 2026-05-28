@@ -28,10 +28,13 @@ interface SIPStore {
   employeeName: string
   mobile: string
   registrationId: number | null
+  /** Resume token returned by /api/journey/start — used for the "Continue Now" button and SMS link. */
+  resumeToken: string | null
   setEmpId: (id: string) => void
   setEmployeeName: (name: string) => void
   setMobile: (mobile: string) => void
   setRegistrationId: (id: number) => void
+  setResumeToken: (token: string | null) => void
 
   // ── Legacy employee profile (kept for AI engine compatibility) ────────
   employee: EmployeeProfile | null
@@ -120,10 +123,12 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
   employeeName: '',
   mobile: '',
   registrationId: null,
+  resumeToken: null,
   setEmpId: (id) => set({ empId: id }),
   setEmployeeName: (name) => set({ employeeName: name }),
   setMobile: (mobile) => set({ mobile }),
   setRegistrationId: (id) => set({ registrationId: id }),
+  setResumeToken: (token) => set({ resumeToken: token }),
 
   // ── Legacy employee profile ───────────────────────────────────────────
   employee: null,
@@ -199,7 +204,7 @@ export const useSIPStore = create<SIPStore>((set, get) => ({
 
   reset: () => set({
     currentStep: 'welcome',
-    empId: '', employeeName: '', mobile: '', registrationId: null,
+    empId: '', employeeName: '', mobile: '', registrationId: null, resumeToken: null,
     employee: null,
     selectedFundId: null, selectedGoal: null, tunedSIPAmount: 500, consentChecked: false,
     questionnaire: initQuestionnaire(), currentQuestion: 'FAMILY',

@@ -7,15 +7,22 @@ import { useSIPStore } from '@/store/useSIPStore'
 import { SHRIRAM_FUNDS } from '@/lib/funds'
 
 export default function IntentCapturedStep() {
-  const { selectedFundId, empId, goNext } = useSIPStore()
+  const {
+    selectedFundId, empId, employeeName, mobile, consentChecked,
+    resumeToken, setResumeToken, goNext,
+  } = useSIPStore()
   const fund = SHRIRAM_FUNDS.find(f => f.id === selectedFundId) || SHRIRAM_FUNDS[0]
   const [saving, setSaving] = useState(true)
   const [saved, setSaved] = useState(false)
 
-  // Save SIP intent to DB when this screen mounts
+  // Persist the legacy sip_intents row AND create a journey (resume token + SMS link).
   useEffect(() => {
-    async function saveIntent() {
+    if (resumeToken) { setSaving(false); setSaved(true); return }
+
+    let cancelled = false
+    async function run() {
       try {
+        // Legacy intent table (kept for admin/demo listings)
         await fetch('/api/sip-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -25,16 +32,37 @@ export default function IntentCapturedStep() {
             fundName: fund.name,
             suggestedSip: 500,
           }),
+        }).catch(() => {})
+
+        // Create journey + dispatch KYC link SMS
+        const res = await fetch('/api/journey/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employeeId:    empId || 'DEMO',
+            name:          employeeName || 'Employee',
+            mobile:        mobile || '',
+            fundId:        fund.id,
+            fundName:      fund.name,
+            suggestedSip:  500,
+            consentStatus: consentChecked ? 'given' : 'given',
+          }),
         })
+        if (res.ok) {
+          const data = await res.json()
+          if (!cancelled && data?.journey?.token) {
+            setResumeToken(data.journey.token)
+          }
+        }
       } catch (_) {
-        // Non-blocking
+        // Non-blocking — the user can still proceed via "Resend KYC link"
       } finally {
-        setSaving(false)
-        setSaved(true)
+        if (!cancelled) { setSaving(false); setSaved(true) }
       }
     }
-    saveIntent()
-  }, [])
+    run()
+    return () => { cancelled = true }
+  }, [resumeToken, empId, employeeName, mobile, consentChecked, fund.id, fund.name, setResumeToken])
 
   return (
     <section className="min-h-[calc(100vh-120px)] bg-shriram-cream flex items-center justify-center px-4 py-16">

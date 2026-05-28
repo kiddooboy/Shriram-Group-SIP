@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { countRecentOtps, createOtpSession } from '@/lib/db'
+import { sendSMS } from '@/lib/sms'
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,30 +19,18 @@ export async function POST(req: NextRequest) {
     const otp = String(Math.floor(100000 + Math.random() * 900000))
     createOtpSession(mobile, otp, 10)
 
-    const apiKey = process.env.FAST2SMS_API_KEY
-    if (apiKey) {
-      try {
-        // Quick SMS route (route=q) — no DLT / no website verification required.
-        // Keep message under 160 chars to bill as a single SMS segment.
-        const message = `Shriram Group SIP: ${otp} is your OTP for employee SIP enrolment. Valid for 10 minutes. Do not share. - Shriram Asset Management`
-        const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${apiKey}&route=q&message=${encodeURIComponent(message)}&flash=0&numbers=${mobile}`
-        const res  = await fetch(url, { method: 'GET' })
-        const data = await res.json()
-        if (data.return) {
-          console.log(`[OTP] SMS sent to +91${mobile}`)
-          return NextResponse.json({ success: true })
-        }
-        console.error('[OTP] Fast2SMS error:', JSON.stringify(data))
-        // fall through to dev fallback below
-      } catch (e) {
-        console.error('[OTP] Fast2SMS request failed:', e)
-        // fall through to dev fallback below
-      }
+    const message =
+      `Shriram Group SIP: ${otp} is your OTP for employee SIP enrolment. ` +
+      `Valid for 10 minutes. Do not share. - Shriram Asset Management`
+
+    const result = await sendSMS(mobile, message)
+
+    if (result.ok) {
+      return NextResponse.json({ success: true })
     }
 
-    // Dev fallback — surface the OTP so the flow is testable without SMS.
-    // Auto-disabled once Fast2SMS starts succeeding above (real SMS path returns first).
-    console.log(`[OTP] *** DEV MODE — OTP for +91${mobile} is: ${otp} ***`)
+    // Gateway unavailable — surface OTP so the flow stays testable.
+    console.log(`[OTP] DEV fallback: OTP for +91${mobile} is ${otp}`)
     return NextResponse.json({ success: true, devOtp: otp })
 
   } catch (e) {
